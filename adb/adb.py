@@ -13,15 +13,11 @@ def command(command: str):
         @wraps(func)
         def wrapper(cls, *args, **kwargs):
 
+            if not isinstance(command, str):
+                raise TypeError("command is not of type string.")
+
             command_args = shlex.split(command)
-
-            if isinstance(command_args, str):
-                command_args = shlex.split(command_args)
-
-            if not isinstance(command_args, list) or any(
-                not isinstance(arg, str) for arg in command_args
-            ):
-                raise TypeError("The command passed is not a list of strings.")
+            command_args.insert(0, "adb")
 
             if isinstance(cls, Device):
                 device_id = getattr(cls, "device_id")
@@ -41,6 +37,8 @@ def command(command: str):
                 raise subprocess.CalledProcessError(
                     process.returncode, command_args, output.encode()
                 )
+
+            setattr(cls, "output", output)
             return func(cls, *args, **kwargs)
 
         return wrapper
@@ -71,10 +69,16 @@ class Package:
 
 
 class ADB(object):
-    command = None
+
+    output: str = None
+    google_packages: list = []
 
     def __init__(self) -> None:
         self.check_adb_path()
+        self.google_packages = self.get_google_packages()
+
+    def get_google_packages(self):
+        pass
 
     def check_adb_path(self):
         """
@@ -96,13 +100,15 @@ class ADB(object):
                     "Cannot execute adb commands, please add platform-tools to your PATH variable."
                 )
 
+    @command("devices")
     def get_devices(self):
         """
         Checks which devices are available and returns them as Device objects.
         """
 
         devices = []
-        output = self.execute("devices").splitlines()
+        output = self.output.splitlines()
+
         for lines in output:
             lines = lines.strip().split()
 
@@ -336,10 +342,8 @@ class Device(ADB):
             self.revoke_permission(package, p)
 
     def google_debloat(self):
-        file = None
-        with resources.open_text("lists", "google.json") as file:
-            google_packages = self.get_packages_from_json(file, "package_name")
-            self.uninstall_packages(google_packages)
+        with resources.open_text(__package__, "google.json") as file:
+            self.uninstall_packages(self.google_packages)
 
     def backup(self, shared_storage=False, apks=False, system=False, path: str = None):
         cmd = ["backup", "-all"]
