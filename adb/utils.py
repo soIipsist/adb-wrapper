@@ -1,8 +1,8 @@
-import io
 import json
 import os
 import shutil
 import platform
+import urllib.request
 
 
 def create_json_file(json_file, data=None):
@@ -41,22 +41,27 @@ def download_sdk_platform_tools(output_directory=None):
         )
     )
 
-    # download sdk platform tools
     try:
+        # Ensure the output directory exists
+        os.makedirs(output_directory, exist_ok=True)
+
+        file_name = os.path.basename(download_link)
+        sdk_path = os.path.join(output_directory, file_name)
+
         print("Downloading SDK platform tools...")
-        sdk_path = wget.download(download_link, out=output_directory)
+        with urllib.request.urlopen(download_link) as response:
+            with open(sdk_path, "wb") as out_file:
+                shutil.copyfileobj(response, out_file)
 
-        # unzip
+        print("Extracting SDK platform tools...")
         shutil.unpack_archive(sdk_path, output_directory)
-        sdk_path = sdk_path.replace(".zip", "").replace("/", "\\")
 
-        print()
+        os.remove(sdk_path)
+
         print(
-            "SDK platform-tools was successfully downloaded at '{0}'.".format(
-                output_directory
-            )
+            f"SDK platform-tools was successfully downloaded and extracted at '{output_directory}'."
         )
     except Exception as e:
-        print(e)
+        print(f"An error occurred: {e}")
 
     return sdk_path

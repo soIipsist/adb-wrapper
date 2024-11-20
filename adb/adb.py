@@ -6,14 +6,18 @@ from .utils import *
 from functools import wraps
 import shutil
 from importlib import resources
-import io
-import platform
 
 
 def command(command, *args, **kwargs):
     def _command(f):
         def wrapper(self, *args, **kwargs):
 
+            command_args = args
+
+            if isinstance(command_args, str):
+                command_args = shlex.split(command_args)
+
+            subprocess
             return
 
         return wrapper
@@ -22,6 +26,12 @@ def command(command, *args, **kwargs):
 
 
 class Package:
+    img_src = None
+    package_name = None
+    name = None
+    genre = None
+    privileged = False
+
     def __init__(
         self,
         img_src: str = None,
@@ -30,7 +40,11 @@ class Package:
         genre: str = None,
         privileged: bool = False,
     ):
-        pass
+        self.img_src = img_src
+        self.package_name = package_name
+        self.name = name
+        self.genre = genre
+        self.privileged = privileged
 
 
 class ADB(object):

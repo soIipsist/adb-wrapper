@@ -41,7 +41,7 @@ pip install -r requirements.txt
 
 ## Usage
 
-#### Example
+### Example
 
 ```Python
 from adb.adb import ADB, Device
