@@ -27,16 +27,10 @@ pip install git+https://github.com/soIipsis/adb-wrapper@main
 
 ### Manual installation
 
-1. Clone the git repository:
+Clone the git repository:
 
 ```bash
 git clone https://github.com/soIipsis/adb-wrapper@main
-```
-
-2. Install all package dependencies:
-
-```bash
-pip install -r requirements.txt
 ```
 
 ## Usage

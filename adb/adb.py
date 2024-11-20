@@ -8,21 +8,44 @@ import shutil
 from importlib import resources
 
 
-def command(command, *args, **kwargs):
-    def _command(f):
-        def wrapper(self, *args, **kwargs):
+def command(command: str):
+    def decorator(func):
+        @wraps(func)
+        def wrapper(cls, *args, **kwargs):
 
-            command_args = args
+            command_args = shlex.split(command)
 
             if isinstance(command_args, str):
                 command_args = shlex.split(command_args)
 
-            subprocess
-            return
+            if not isinstance(command_args, list) or any(
+                not isinstance(arg, str) for arg in command_args
+            ):
+                raise TypeError("The command passed is not a list of strings.")
+
+            if isinstance(cls, Device):
+                device_id = getattr(cls, "device_id")
+                command_args.insert(1, "-s")
+                command_args.insert(2, device_id)
+
+            process = subprocess.Popen(
+                command_args, stdout=subprocess.PIPE, stderr=subprocess.STDOUT
+            )
+            output = (
+                process.communicate(timeout=None)[0]
+                .strip()
+                .decode(errors="backslashreplace")
+            )
+
+            if process.returncode != 0:
+                raise subprocess.CalledProcessError(
+                    process.returncode, command_args, output.encode()
+                )
+            return func(cls, *args, **kwargs)
 
         return wrapper
 
-    return _command
+    return decorator
 
 
 class Package:
@@ -51,7 +74,7 @@ class ADB(object):
     command = None
 
     def __init__(self) -> None:
-        self.command = self.check_adb_path()
+        self.check_adb_path()
 
     def check_adb_path(self):
         """
@@ -72,8 +95,6 @@ class ADB(object):
                 raise FileNotFoundError(
                     "Cannot execute adb commands, please add platform-tools to your PATH variable."
                 )
-
-        return "adb"
 
     def get_devices(self):
         """
@@ -141,10 +162,6 @@ class Device(ADB):
 
     def __init__(self, id) -> None:
         self.id = id
-        self.command = self.check_adb_path()
-
-    def execute(self, command_args: List[str]):
-        return super().execute(command_args, self.id)
 
     def get_devices(self):
         raise AttributeError("'Device' object has no attribute 'get_devices'")
@@ -172,7 +189,7 @@ class Device(ADB):
         return packages
 
     def command(*arguments, **kwargs):
-        def _command(f):
+        def command(f):
             def wrapper(self, *args):
                 if len(args) > 0:
                     params = str(*arguments).format(*args)
@@ -181,7 +198,7 @@ class Device(ADB):
 
             return wrapper
 
-        return _command
+        return command
 
     def get_shell_property(self, prop):
         return self.execute("shell getprop {0}".format(prop))
