@@ -68,7 +68,7 @@ class Package:
         self.privileged = privileged
 
 
-class ADB(object):
+class ADB:
 
     output: str = None
     google_packages: list = []
@@ -86,6 +86,9 @@ class ADB(object):
         """
         # check if PATH variable was found
         path = os.environ.get("path")
+
+        if path is None:
+            path = ""
 
         if "platform-tools" not in path.lower():
             user_input = input(
