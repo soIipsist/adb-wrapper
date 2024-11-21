@@ -50,7 +50,7 @@ def command(command: str):
 class PackageType(str, Enum):
     THIRD_PARTY = "-3"
     SYSTEM = "-f"
-    GOOGLE = "google"
+    GOOGLE = None
 
 
 class SettingsType(str, Enum):
@@ -93,34 +93,10 @@ class ADB:
     google_packages: list = []
 
     def __init__(self) -> None:
-        self.check_adb_path()
         self.google_packages = self.get_google_packages()
 
     def get_google_packages(self):
         pass
-
-    def check_adb_path(self):
-        """
-        Returns base adb command if PATH variable was found.
-        """
-        # check if PATH variable was found
-        path = os.environ.get("path")
-
-        if path is None:
-            path = ""
-
-        if "platform-tools" not in path.lower():
-            user_input = input(
-                "adb was not found as a PATH variable. Would you like to download the latest version of sdk platform-tools? (y/n)"
-            )
-            if user_input == "y":
-                download_dir = input("Download directory: ")
-                sdk_path = download_sdk_platform_tools(download_dir)
-                return sdk_path
-            else:
-                raise FileNotFoundError(
-                    "Cannot execute adb commands, please add platform-tools to your PATH variable."
-                )
 
     @command("devices")
     def get_devices(self):
@@ -149,7 +125,11 @@ class ADB:
 
 class Device:
     id = None
+    output = None
     settings = {"system_settings": [], "global_settings": [], "secure_settings": []}
+    system_settings = {}
+    global_settings = {}
+    secure_settings = {}
     system_packages = []
     third_party_packages = []
     do_not_delete_packages = []
@@ -194,14 +174,11 @@ class Device:
         system_settings = self.get_system_settings()
         global_settings = self.get_global_settings()
         secure_settings = self.get_secure_settings()
-        self.settings.update(
-            system_settings=system_settings,
-            global_settings=global_settings,
-            secure_settings=secure_settings,
-        )
+
+        print(system_settings)
         return self.settings
 
-    @command("shell settings list system")
+    @command(f"shell settings list {PackageType.SYSTEM}")
     def get_system_settings(self):
         return self.output
 
