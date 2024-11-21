@@ -93,6 +93,8 @@ class ADB:
     google_packages: list = []
 
     def __init__(self) -> None:
+        sdk_path = check_sdk_path()
+        print(sdk_path)
         self.google_packages = self.get_google_packages()
 
     def get_google_packages(self):
@@ -117,10 +119,14 @@ class ADB:
 
     def execute(self, command_args: str):
         """
-        Executes an adb command and returns its output. If a device id is provided, the command
-        will be executed on the target device.
+        Executes an adb command and returns its output.
         """
-        return command(command_args)
+
+        @command(command_args)
+        def run_command(cls):
+            return cls.output
+
+        return run_command(self)
 
 
 class Device:
@@ -139,10 +145,14 @@ class Device:
 
     def execute(self, command_args: str):
         """
-        Executes an adb command and returns its output. If a device id is provided, the command
-        will be executed on the target device.
+        Executes an adb command and returns its output.
         """
-        return command(command_args)
+
+        @command(command_args)
+        def run_command(cls):
+            return cls.output
+
+        return run_command(self)
 
     def download_sdk_platform_tools(self):
         raise AttributeError(

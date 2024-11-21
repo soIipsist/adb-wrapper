@@ -74,7 +74,7 @@ def set_environment_variable(sdk_path: str):
     print(f"Added '{sdk_path}' to the PATH environment variable.")
 
 
-def check_adb_path():
+def check_sdk_path():
     """
     Checks if 'platform-tools' exists in the PATH environment variable.
     Prompts the user to download it if not found and returns the platform-tools directory.

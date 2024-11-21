@@ -1,5 +1,5 @@
 from pprint import PrettyPrinter
-from adb.utils import check_adb_path
+from adb.utils import check_sdk_path
 from test_base import TestBase, run_test_methods
 from adb.adb import ADB, Device, Package
 import os
@@ -15,18 +15,20 @@ class TestAdb(TestBase):
     def test_get_devices(self):
         devices = adb.get_devices()
 
-        print(device)
         for device in devices:
+            print(device)
             self.assertTrue(isinstance(device, Device))
             device: Device
             self.assertTrue(device.id is not None)
 
     def test_check_adb_path(self):
-        platform_tools_path = check_adb_path()
+        platform_tools_path = check_sdk_path()
         print(os.environ.get("PATH"))
 
     def test_execute_command(self):
-        pass
+        output = adb.execute("version")
+
+        print(output)
 
     # def test_get_packages(self):
     #     packages = adb.get_google_packages()
@@ -39,9 +41,9 @@ class TestAdb(TestBase):
 
 if __name__ == "__main__":
     test_methods = [
+        # TestAdb.test_check_adb_path,
         # TestAdb.test_get_devices,
-        # TestAdb.test_execute_command,
-        TestAdb.test_check_adb_path,
+        TestAdb.test_execute_command,
         # TestAdb.test_get_google_packages,
     ]
     run_test_methods(test_methods)
