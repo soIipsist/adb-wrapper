@@ -31,7 +31,6 @@ def download_sdk_platform_tools(output_directory=None):
     PATH variable.
 
     """
-
     if not output_directory:
         print("No directory found, using default home directory.")
         output_directory = os.path.expanduser("~")
@@ -59,6 +58,7 @@ def download_sdk_platform_tools(output_directory=None):
         print(
             f"SDK platform-tools was successfully downloaded and extracted at '{output_directory}'."
         )
+        return os.path.join(output_directory, "platform-tools")
     except Exception as e:
         print(f"An error occurred: {e}")
 
@@ -67,11 +67,11 @@ def download_sdk_platform_tools(output_directory=None):
 
 def set_environment_variable(sdk_path: str):
     if os.name == "nt":  # Windows
-        os.environ["PATH"] += ";C:\\MyCustomPath"
+        os.environ["PATH"] += f";{sdk_path}"
     else:  # macOS/Linux
         os.environ["PATH"] += f":{sdk_path}"
 
-    return os.environ["PATH"]
+    print(f"Added '{sdk_path}' to the PATH environment variable.")
 
 
 def check_adb_path():
@@ -98,17 +98,18 @@ def check_adb_path():
         )
 
         if user_input == "y":
+
+            default_dir = Path.home()
             download_dir = input(
-                "Enter the directory where platform-tools should be downloaded: "
+                f"Enter the directory where platform-tools should be downloaded (default: {default_dir}): "
             ).strip()
-            download_dir = Path(download_dir).resolve()
+            download_dir = Path(download_dir).resolve() if download_dir else default_dir
 
             sdk_path = download_sdk_platform_tools(download_dir)
             if not sdk_path:
                 raise RuntimeError("Failed to download SDK platform-tools.")
 
-            os.environ["PATH"] += os.pathsep + str(sdk_path)
-            print(f"Added '{sdk_path}' to the PATH environment variable.")
+            set_environment_variable(sdk_path)
             return str(sdk_path)
         else:
             raise FileNotFoundError(

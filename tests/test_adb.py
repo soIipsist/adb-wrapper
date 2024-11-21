@@ -2,6 +2,7 @@ from pprint import PrettyPrinter
 from adb.utils import check_adb_path
 from test_base import TestBase, run_test_methods
 from adb.adb import ADB, Device, Package
+import os
 
 adb = ADB()
 
@@ -22,7 +23,7 @@ class TestAdb(TestBase):
 
     def test_check_adb_path(self):
         platform_tools_path = check_adb_path()
-        print(platform_tools_path)
+        print(os.environ.get("PATH"))
 
     def test_execute_command(self):
         pass
