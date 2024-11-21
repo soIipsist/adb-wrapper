@@ -1,7 +1,4 @@
 import unittest
-import os
-import subprocess
-import inspect
 
 from pprint import PrettyPrinter
 

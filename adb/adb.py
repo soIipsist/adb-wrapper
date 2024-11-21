@@ -1,10 +1,10 @@
+from enum import Enum
 import subprocess
 import shlex
 import os
 from typing import List
 from .utils import *
 from functools import wraps
-import shutil
 from importlib import resources
 
 
@@ -13,6 +13,7 @@ def command(command: str):
         @wraps(func)
         def wrapper(cls, *args, **kwargs):
 
+            print("ARGS", args, kwargs)
             if not isinstance(command, str):
                 raise TypeError("command is not of type string.")
 
@@ -46,12 +47,26 @@ def command(command: str):
     return decorator
 
 
+class PackageType(str, Enum):
+    THIRD_PARTY = "-3"
+    SYSTEM = "-f"
+    GOOGLE = "google"
+
+
+class SettingsType(str, Enum):
+    SECURE = "secure"
+    GLOBAL = "global"
+    SYSTEM = "system"
+
+
 class Package:
     img_src = None
     package_name = None
     name = None
     genre = None
     privileged = False
+    package_type = PackageType.GOOGLE
+    do_not_delete = False
 
     def __init__(
         self,
@@ -60,12 +75,16 @@ class Package:
         name: str = None,
         genre: str = None,
         privileged: bool = False,
+        package_type: PackageType = None,
+        do_not_delete: bool = False,
     ):
         self.img_src = img_src
         self.package_name = package_name
         self.name = name
         self.genre = genre
         self.privileged = privileged
+        self.package_type = package_type
+        self.do_not_delete = do_not_delete
 
 
 class ADB:
@@ -120,49 +139,15 @@ class ADB:
                 devices.append(Device(id))
         return devices
 
-    def execute(self, command_args: List[str], device_id: str = None):
+    def execute(self, command_args: str):
         """
         Executes an adb command and returns its output. If a device id is provided, the command
         will be executed on the target device.
         """
-        output = None
-
-        try:
-            # split commands for Popen function if type is str
-
-            if isinstance(command_args, str):
-                command_args = shlex.split(command_args)
-
-            if not isinstance(command_args, list) or any(
-                not isinstance(arg, str) for arg in command_args
-            ):
-                raise TypeError("The command passed is not a list of strings.")
-
-            command_args.insert(0, self.command)
-            if device_id:
-                command_args.insert(1, "-s")
-                command_args.insert(2, device_id)
-
-            process = subprocess.Popen(
-                command_args, stdout=subprocess.PIPE, stderr=subprocess.STDOUT
-            )
-            output = (
-                process.communicate(timeout=None)[0]
-                .strip()
-                .decode(errors="backslashreplace")
-            )
-
-            if process.returncode != 0:
-                print(output)
-                raise subprocess.CalledProcessError(
-                    process.returncode, command_args, output.encode()
-                )
-        except Exception as e:
-            print(e)
-        return output
+        return command(command_args)
 
 
-class Device(ADB):
+class Device:
     id = None
     settings = {"system_settings": [], "global_settings": [], "secure_settings": []}
     system_packages = []
@@ -172,8 +157,12 @@ class Device(ADB):
     def __init__(self, id) -> None:
         self.id = id
 
-    def get_devices(self):
-        raise AttributeError("'Device' object has no attribute 'get_devices'")
+    def execute(self, command_args: str):
+        """
+        Executes an adb command and returns its output. If a device id is provided, the command
+        will be executed on the target device.
+        """
+        return command(command_args)
 
     def download_sdk_platform_tools(self):
         raise AttributeError(
@@ -197,20 +186,9 @@ class Device(ADB):
         packages.extend(self.third_party_packages)
         return packages
 
-    def command(*arguments, **kwargs):
-        def command(f):
-            def wrapper(self, *args):
-                if len(args) > 0:
-                    params = str(*arguments).format(*args)
-                    return self.execute(params)
-                return self.execute(*arguments)
-
-            return wrapper
-
-        return command
-
+    @command("shell getprop")
     def get_shell_property(self, prop):
-        return self.execute("shell getprop {0}".format(prop))
+        return self.output
 
     def get_settings(self):
         system_settings = self.get_system_settings()
@@ -225,11 +203,11 @@ class Device(ADB):
 
     @command("shell settings list system")
     def get_system_settings(self):
-        pass
+        return self.output
 
     @command("shell svc wifi enable")
     def enable_wifi(self):
-        pass
+        return self.output
 
     @command("shell svc wifi disable")
     def disable_wifi(self):
@@ -247,11 +225,11 @@ class Device(ADB):
     def get_global_settings(self):
         pass
 
-    @command("shell locksettings set-password {0}")
+    @command("shell locksettings set-password")
     def set_password(self, password):
         pass
 
-    @command("shell locksettings clear --old {0}")
+    @command("shell locksettings clear --old")
     def clear_password(self, password):
         pass
 
@@ -267,11 +245,11 @@ class Device(ADB):
     def get_third_party_packages(self):
         pass
 
-    @command("install {0}")
+    @command("install")
     def install_package(self, package):
         pass
 
-    @command("uninstall --user 0 {0}")
+    @command("uninstall --user 0")
     def uninstall_package(self, package):
         pass
 
@@ -283,31 +261,31 @@ class Device(ADB):
     def disable_lock_screen(self):
         pass
 
-    @command("shell input tap {0} {1}")
+    @command("shell input tap")
     def execute_touch_event(self, x, y):
         pass
 
-    @command("shell pm grant {0} {1}")
+    @command("shell pm grant")
     def grant_permission(self, package, permission):
         pass
 
-    @command("shell pm revoke {0} {1}")
+    @command("shell pm revoke")
     def revoke_permission(self, package, permission):
         pass
 
-    @command("shell cmd package set-home-activity {0}")
+    @command("shell cmd package set-home-activity")
     def set_home_app(self, package):
         pass
 
-    @command("restore {0}")
+    @command("restore")
     def restore(self, backup_file):
         pass
 
-    @command("push {0} {1}")
+    @command("push")
     def push_file(self, pc_path, device_path):
         pass
 
-    @command("pull {0} {1}")
+    @command("pull")
     def pull_file(self, device_path, pc_path):
         pass
 
@@ -345,8 +323,7 @@ class Device(ADB):
             self.revoke_permission(package, p)
 
     def google_debloat(self):
-        with resources.open_text(__package__, "google.json") as file:
-            self.uninstall_packages(self.google_packages)
+        self.uninstall_packages(self.google_packages)
 
     def backup(self, shared_storage=False, apks=False, system=False, path: str = None):
         cmd = ["backup", "-all"]
