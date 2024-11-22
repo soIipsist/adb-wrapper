@@ -72,13 +72,33 @@ class TestAdb(TestBase):
 
     def test_get_system_settings(self):
         system_settings = target_device.get_system_settings()
+        self.assertTrue(isinstance(system_settings, dict))
 
     def test_get_global_settings(self):
         global_settings = target_device.get_global_settings()
         self.assertTrue(isinstance(global_settings, dict))
 
+    def test_get_secure_settings(self):
+        secure_settings = target_device.get_secure_settings()
+        self.assertTrue(isinstance(secure_settings, dict))
+
     def test_get_settings(self):
+        settings = target_device.get_settings()
+        global_settings = settings.get("global")
+        print(global_settings)
+
+    def test_grant_permissions(self):
         pass
+
+    def test_install_package(self):
+        output = target_device.install_package("com.google.android.apps.youtube.music")
+        print(output)
+
+    def test_uninstall_package(self):
+        output = target_device.uninstall_package(
+            "com.google.android.apps.youtube.music"
+        )
+        print(output)
 
 
 if __name__ == "__main__":
@@ -92,6 +112,11 @@ if __name__ == "__main__":
         # TestAdb.test_get_third_party_packages,
         # TestAdb.test_filter_packages,
         # TestAdb.test_get_system_settings,
-        TestAdb.test_get_global_settings,
+        # TestAdb.test_get_global_settings,
+        # TestAdb.test_get_secure_settings,
+        # TestAdb.test_get_settings,
+        # TestAdb.test_grant_permissions,
+        TestAdb.test_install_package,
+        # TestAdb.test_uninstall_package,
     ]
     run_test_methods(test_methods)

@@ -11,8 +11,7 @@ from importlib import resources
 def command(command: str):
     def decorator(func):
         @wraps(func)
-        def wrapper(cls, **kwargs):
-            print("ARGS", kwargs)
+        def wrapper(cls, *args, **kwargs):
 
             if not isinstance(command, str):
                 raise TypeError("command is not of type string.")
@@ -24,6 +23,9 @@ def command(command: str):
                 device_id = getattr(cls, "id")
                 command_args.insert(1, "-s")
                 command_args.insert(2, device_id)
+
+            if args:
+                command_args.extend(args)
 
             process = subprocess.Popen(
                 command_args, stdout=subprocess.PIPE, stderr=subprocess.STDOUT
@@ -40,7 +42,7 @@ def command(command: str):
                 )
 
             setattr(cls, "output", output)
-            return func(cls, **kwargs)
+            return func(cls, *args, **kwargs)
 
         return wrapper
 
@@ -112,19 +114,31 @@ def get_google_packages():
     return packages
 
 
-class Device:
-    id = None
-    output = None
-    system_settings = {}
-    global_settings = {}
-    secure_settings = {}
+class ADB:
 
-    system_packages = []
-    third_party_packages = []
-    do_not_delete_packages = []
+    output: str = None
+    google_packages: list = []
+    sdk_path = None
 
-    def __init__(self, id) -> None:
-        self.id = id
+    def __init__(self) -> None:
+        self.sdk_path = check_sdk_path()
+
+    @command("devices")
+    def get_devices(self) -> List["Device"]:
+        """
+        Checks which devices are available and returns them as Device objects.
+        """
+
+        devices = []
+        output = self.output.splitlines()
+
+        for lines in output:
+            lines = lines.strip().split()
+
+            if len(lines) == 2:
+                id = lines[0]
+                devices.append(Device(id))
+        return devices
 
     def execute(self, command_args: str):
         """
@@ -136,6 +150,20 @@ class Device:
             return cls.output
 
         return run_command(self)
+
+
+class Device(ADB):
+    id = None
+    system_settings = {}
+    global_settings = {}
+    secure_settings = {}
+
+    system_packages = []
+    third_party_packages = []
+    do_not_delete_packages = []
+
+    def __init__(self, id) -> None:
+        self.id = id
 
     def get_model(self):
         return self.get_shell_property("ro.product.model")
@@ -181,7 +209,7 @@ class Device:
     def get_shell_property(self, prop):
         return self.output
 
-    def parse_settings(self, settings: str):
+    def parse_settings(self, settings: str) -> dict:
         lines = settings.strip().splitlines()
 
         settings = {}
@@ -198,9 +226,9 @@ class Device:
         secure_settings = self.get_secure_settings()
 
         settings = {
-            "system_settings": system_settings,
-            "global_settings": global_settings,
-            "secure_settings": secure_settings,
+            SettingsType.SYSTEM.value: system_settings,
+            SettingsType.GLOBAL.value: global_settings,
+            SettingsType.SECURE.value: secure_settings,
         }
         return settings
 
@@ -385,41 +413,3 @@ class Device:
             setting_cmd = self.get_setting_cmd(setting)
             cmd = "shell settings put {0}".format(setting_cmd)
             self.execute(cmd)
-
-
-class ADB:
-
-    output: str = None
-    google_packages: list = []
-    sdk_path = None
-
-    def __init__(self) -> None:
-        self.sdk_path = check_sdk_path()
-
-    @command("devices")
-    def get_devices(self) -> list[Device]:
-        """
-        Checks which devices are available and returns them as Device objects.
-        """
-
-        devices = []
-        output = self.output.splitlines()
-
-        for lines in output:
-            lines = lines.strip().split()
-
-            if len(lines) == 2:
-                id = lines[0]
-                devices.append(Device(id))
-        return devices
-
-    def execute(self, command_args: str):
-        """
-        Executes an adb command and returns its output.
-        """
-
-        @command(command_args)
-        def run_command(cls):
-            return cls.output
-
-        return run_command(self)
