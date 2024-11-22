@@ -64,7 +64,6 @@ class Package:
     package_name = None
     name = None
     genre = None
-    privileged = False
     package_type = PackageType.GOOGLE
     do_not_delete = False
 
@@ -74,7 +73,6 @@ class Package:
         package_name: str = None,
         name: str = None,
         genre: str = None,
-        privileged: bool = False,
         package_type: PackageType = None,
         do_not_delete: bool = False,
     ):
@@ -82,60 +80,58 @@ class Package:
         self.package_name = package_name
         self.name = name
         self.genre = genre
-        self.privileged = privileged
         self.package_type = package_type
         self.do_not_delete = do_not_delete
 
+    def __repr__(self) -> str:
+        return f"<Package({self.package_name})>"
 
-class ADB:
+    def __str__(self) -> str:
+        return f"<Package({self.package_name})>"
 
-    output: str = None
-    google_packages: list = []
+    def filter_packages(self, packages: list):
+        filtered = []
 
-    def __init__(self) -> None:
-        sdk_path = check_sdk_path()
-        print(sdk_path)
-        self.google_packages = self.get_google_packages()
+        for package in packages:
+            package: Package
 
-    def get_google_packages(self):
-        pass
+            conditions = [
+                package.name == self.name,
+                package.package_name == self.name,
+                package.img_src == self.img_src,
+                self.package_type == package.package_type,
+                self.genre == package.genre,
+                self.do_not_delete == package.do_not_delete,
+            ]
 
-    @command("devices")
-    def get_devices(self):
-        """
-        Checks which devices are available and returns them as Device objects.
-        """
+            if any(conditions):
+                filtered.append(package)
 
-        devices = []
-        output = self.output.splitlines()
+        return filtered
 
-        for lines in output:
-            lines = lines.strip().split()
 
-            if len(lines) == 2:
-                id = lines[0]
-                devices.append(Device(id))
-        return devices
+def get_google_packages():
+    packages = []
 
-    def execute(self, command_args: str):
-        """
-        Executes an adb command and returns its output.
-        """
+    with resources.open_text(__package__, "google.json") as file:
+        packages = json.load(file)
 
-        @command(command_args)
-        def run_command(cls):
-            return cls.output
+        for idx, package in enumerate(packages):
+            package: dict
+            package = Package(**package)
+            packages[idx] = package
 
-        return run_command(self)
+    return packages
 
 
 class Device:
     id = None
     output = None
-    settings = {"system_settings": [], "global_settings": [], "secure_settings": []}
+    settings = {}
     system_settings = {}
     global_settings = {}
     secure_settings = {}
+
     system_packages = []
     third_party_packages = []
     do_not_delete_packages = []
@@ -168,13 +164,32 @@ class Device:
     def get_sdk(self):
         return self.get_shell_property("ro.build.version.sdk")
 
-    def get_packages(self):
-        packages = []
-        self.system_packages = self.get_system_packages().split("\n")
-        self.third_party_packages = self.get_third_party_packages().split("\n")
-        packages.extend(self.system_packages)
-        packages.extend(self.third_party_packages)
-        return packages
+    def get_packages(
+        self,
+        package_type: PackageType = None,
+        package_name: str = None,
+        name: str = None,
+    ):
+        """
+        Retrieve a list of packages based on the package type.
+        If no package type is specified, all packages are returned.
+        """
+        package_mapping = {
+            PackageType.GOOGLE: get_google_packages,
+            PackageType.SYSTEM: self.get_system_packages,
+            PackageType.THIRD_PARTY: self.get_third_party_packages,
+        }
+
+        if package_type is None:
+            packages = (
+                set(get_google_packages())
+                | set(self.get_system_packages())
+                | set(self.get_third_party_packages())
+            )
+        else:
+            packages = set(package_mapping[package_type]())
+
+        return list(packages)
 
     @command("shell getprop")
     def get_shell_property(self, prop):
@@ -184,8 +199,6 @@ class Device:
         system_settings = self.get_system_settings()
         global_settings = self.get_global_settings()
         secure_settings = self.get_secure_settings()
-
-        print(system_settings)
         return self.settings
 
     @command(f"shell settings list {PackageType.SYSTEM}")
@@ -230,7 +243,8 @@ class Device:
 
     @command("shell pm list packages -3")
     def get_third_party_packages(self):
-        pass
+        packages = self.output
+        return packages
 
     @command("install")
     def install_package(self, package):
@@ -310,7 +324,8 @@ class Device:
             self.revoke_permission(package, p)
 
     def google_debloat(self):
-        self.uninstall_packages(self.google_packages)
+        google_packages = get_google_packages()
+        self.uninstall_packages(google_packages)
 
     def backup(self, shared_storage=False, apks=False, system=False, path: str = None):
         cmd = ["backup", "-all"]
@@ -359,3 +374,41 @@ class Device:
             setting_cmd = self.get_setting_cmd(setting)
             cmd = "shell settings put {0}".format(setting_cmd)
             self.execute(cmd)
+
+
+class ADB:
+
+    output: str = None
+    google_packages: list = []
+    sdk_path = None
+
+    def __init__(self) -> None:
+        self.sdk_path = check_sdk_path()
+
+    @command("devices")
+    def get_devices(self) -> list[Device]:
+        """
+        Checks which devices are available and returns them as Device objects.
+        """
+
+        devices = []
+        output = self.output.splitlines()
+
+        for lines in output:
+            lines = lines.strip().split()
+
+            if len(lines) == 2:
+                id = lines[0]
+                devices.append(Device(id))
+        return devices
+
+    def execute(self, command_args: str):
+        """
+        Executes an adb command and returns its output.
+        """
+
+        @command(command_args)
+        def run_command(cls):
+            return cls.output
+
+        return run_command(self)
