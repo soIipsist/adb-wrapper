@@ -65,7 +65,6 @@ class Package:
     name = None
     genre = None
     package_type = PackageType.GOOGLE
-    do_not_delete = False
 
     def __init__(
         self,
@@ -74,14 +73,12 @@ class Package:
         name: str = None,
         genre: str = None,
         package_type: PackageType = None,
-        do_not_delete: bool = False,
     ):
         self.img_src = img_src
         self.package_name = package_name
         self.name = name
         self.genre = genre
         self.package_type = package_type
-        self.do_not_delete = do_not_delete
 
     def __repr__(self) -> str:
         return f"<Package({self.package_name})>"
@@ -109,7 +106,7 @@ def get_google_packages():
 
         for idx, package in enumerate(packages):
             package: dict
-            package = Package(**package)
+            package = Package(**package, package_type=PackageType.GOOGLE)
             packages[idx] = package
 
     return packages
@@ -140,11 +137,6 @@ class Device:
             return cls.output
 
         return run_command(self)
-
-    def download_sdk_platform_tools(self):
-        raise AttributeError(
-            "'Device' object has no attribute 'download_sdk_platform_tools'"
-        )
 
     def get_model(self):
         return self.get_shell_property("ro.product.model")
@@ -234,7 +226,8 @@ class Device:
 
     @command("shell pm list packages -f")
     def get_system_packages(self):
-        pass
+        packages = self.output
+        return packages
 
     @command("shell pm list packages -3")
     def get_third_party_packages(self):
@@ -291,12 +284,21 @@ class Device:
         pass
 
     def install_packages(self, packages: List[str]):
+        packages = [
+            Package(package_name=package) if isinstance(package, Package) else package
+            for package in packages
+        ]
+
         for p in packages:
             print("Installing package {0}...".format(p))
             self.install_package(p)
 
     def uninstall_packages(self, packages: List[str]):
-        packages = [p for p in packages if p not in self.do_not_delete_packages]
+        packages = [
+            Package(package_name=package) if isinstance(package, Package) else package
+            for package in packages
+            if package not in self.do_not_delete_packages
+        ]
 
         for p in packages:
             print("Uninstalling package {0}...".format(p))
@@ -360,7 +362,7 @@ class Device:
         key = input[1:-1]
         key = key[0] if len(key) == 1 else str.join(".", key)
         value = input[-1]
-        output = "{0} {1} {2}".format(namespace, key, value)
+        output = f"{namespace} {key} {value}"
 
         return output
 

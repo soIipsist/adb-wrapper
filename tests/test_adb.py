@@ -13,6 +13,7 @@ class TestAdb(TestBase):
 
     def setUp(self) -> None:
         super().setUp()
+        self.assertTrue(target_device is not None)
 
     def test_get_devices(self):
         devices = adb.get_devices()
@@ -62,7 +63,7 @@ class TestAdb(TestBase):
         packages = get_google_packages()
 
         filtered = Package.filter_packages(
-            packages, genre="Auto & Vehicles", name="Android Auto for phone screens"
+            packages, name="Android Auto for phone screens"
         )
 
         print(len(filtered), len(packages))
@@ -76,8 +77,7 @@ if __name__ == "__main__":
         # TestAdb.test_get_packages,
         # TestAdb.test_get_system_packages,
         # TestAdb.test_get_google_packages,
-        # TestAdb.test_get_third_party_packages,
-        # TestAdb.test_get_google_packages,
-        TestAdb.test_filter_packages,
+        TestAdb.test_get_third_party_packages,
+        # TestAdb.test_filter_packages,
     ]
     run_test_methods(test_methods)
