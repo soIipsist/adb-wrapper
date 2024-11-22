@@ -59,7 +59,13 @@ class TestAdb(TestBase):
         self.assertTrue(len(packages) == 126)
 
     def test_filter_packages(self):
-        pass
+        packages = get_google_packages()
+
+        filtered = Package.filter_packages(
+            packages, genre="Auto & Vehicles", name="Android Auto for phone screens"
+        )
+
+        print(len(filtered), len(packages))
 
 
 if __name__ == "__main__":
@@ -71,7 +77,7 @@ if __name__ == "__main__":
         # TestAdb.test_get_system_packages,
         # TestAdb.test_get_google_packages,
         # TestAdb.test_get_third_party_packages,
-        TestAdb.test_get_google_packages,
+        # TestAdb.test_get_google_packages,
         TestAdb.test_filter_packages,
     ]
     run_test_methods(test_methods)

@@ -89,25 +89,16 @@ class Package:
     def __str__(self) -> str:
         return f"<Package({self.package_name})>"
 
-    def filter_packages(self, packages: list):
-        filtered = []
+    @classmethod
+    def filter_packages(self, packages: list, **filters):
+        def matches(package):
+            return all(
+                getattr(package, key) == value
+                for key, value in filters.items()
+                if value is not None
+            )
 
-        for package in packages:
-            package: Package
-
-            conditions = [
-                package.name == self.name,
-                package.package_name == self.name,
-                package.img_src == self.img_src,
-                self.package_type == package.package_type,
-                self.genre == package.genre,
-                self.do_not_delete == package.do_not_delete,
-            ]
-
-            if any(conditions):
-                filtered.append(package)
-
-        return filtered
+        return [package for package in packages if matches(package)]
 
 
 def get_google_packages():
@@ -189,7 +180,11 @@ class Device:
         else:
             packages = set(package_mapping[package_type]())
 
-        return list(packages)
+        filtered_packages = Package.filter_packages(
+            packages, package_name=package_name, name=name, package_type=package_type
+        )
+
+        return list(filtered_packages)
 
     @command("shell getprop")
     def get_shell_property(self, prop):
