@@ -11,9 +11,9 @@ from importlib import resources
 def command(command: str):
     def decorator(func):
         @wraps(func)
-        def wrapper(cls, *args, **kwargs):
+        def wrapper(cls, **kwargs):
+            print("ARGS", kwargs)
 
-            print("ARGS", args, kwargs)
             if not isinstance(command, str):
                 raise TypeError("command is not of type string.")
 
@@ -21,7 +21,7 @@ def command(command: str):
             command_args.insert(0, "adb")
 
             if isinstance(cls, Device):
-                device_id = getattr(cls, "device_id")
+                device_id = getattr(cls, "id")
                 command_args.insert(1, "-s")
                 command_args.insert(2, device_id)
 
@@ -40,7 +40,7 @@ def command(command: str):
                 )
 
             setattr(cls, "output", output)
-            return func(cls, *args, **kwargs)
+            return func(cls, **kwargs)
 
         return wrapper
 
@@ -115,7 +115,6 @@ def get_google_packages():
 class Device:
     id = None
     output = None
-    settings = {}
     system_settings = {}
     global_settings = {}
     secure_settings = {}
@@ -182,15 +181,40 @@ class Device:
     def get_shell_property(self, prop):
         return self.output
 
+    def parse_settings(self, settings: str):
+        lines = settings.strip().splitlines()
+
+        settings = {}
+        for line in lines:
+            if "=" in line:
+                key, value = line.split("=", 1)
+                settings[key.strip()] = value.strip()
+
+        return settings
+
     def get_settings(self):
         system_settings = self.get_system_settings()
         global_settings = self.get_global_settings()
         secure_settings = self.get_secure_settings()
-        return self.settings
 
-    @command(f"shell settings list {PackageType.SYSTEM}")
+        settings = {
+            "system_settings": system_settings,
+            "global_settings": global_settings,
+            "secure_settings": secure_settings,
+        }
+        return settings
+
+    @command(f"shell settings list {SettingsType.SYSTEM.value}")
     def get_system_settings(self):
-        return self.output
+        return self.parse_settings(self.output)
+
+    @command(f"shell settings list {SettingsType.GLOBAL.value}")
+    def get_global_settings(self):
+        return self.parse_settings(self.output)
+
+    @command(f"shell settings list {SettingsType.SECURE.value}")
+    def get_secure_settings(self):
+        return self.parse_settings(self.output)
 
     @command("shell svc wifi enable")
     def enable_wifi(self):
@@ -198,90 +222,80 @@ class Device:
 
     @command("shell svc wifi disable")
     def disable_wifi(self):
-        pass
+        return self.output
 
     @command("shell svc data enable")
     def enable_mobile_data(self):
-        pass
+        return self.output
 
     @command("shell svc data disable")
     def disable_mobile_data(self):
-        pass
-
-    @command("shell settings list global")
-    def get_global_settings(self):
-        pass
+        return self.output
 
     @command("shell locksettings set-password")
     def set_password(self, password):
-        pass
+        return self.output
 
     @command("shell locksettings clear --old")
     def clear_password(self, password):
-        pass
-
-    @command("shell settings list secure")
-    def get_secure_settings(self):
-        pass
+        return self.output
 
     @command("shell pm list packages -f")
     def get_system_packages(self):
-        packages = self.output
-        return packages
+        return self.output
 
     @command("shell pm list packages -3")
     def get_third_party_packages(self):
-        packages = self.output
-        return packages
+        return self.output
 
     @command("install")
     def install_package(self, package):
-        pass
+        return self.output
 
     @command("uninstall --user 0")
     def uninstall_package(self, package):
-        pass
+        return self.output
 
     @command("shell cmd statusbar expand-notifications")
     def expand_notifications(self):
-        pass
+        return self.output
 
     @command("shell locksettings set-disabled true")
     def disable_lock_screen(self):
-        pass
+        return self.output
 
     @command("shell input tap")
     def execute_touch_event(self, x, y):
-        pass
+        return self.output
 
     @command("shell pm grant")
     def grant_permission(self, package, permission):
-        pass
+        return self.output
 
     @command("shell pm revoke")
     def revoke_permission(self, package, permission):
-        pass
+        return self.output
 
     @command("shell cmd package set-home-activity")
     def set_home_app(self, package):
-        pass
+        return self.output
 
     @command("restore")
     def restore(self, backup_file):
-        pass
+        return self.output
 
     @command("push")
     def push_file(self, pc_path, device_path):
-        pass
+        return self.output
 
     @command("pull")
     def pull_file(self, device_path, pc_path):
-        pass
+        return self.output
 
     # works if rooted
     @command("shell am broadcast -a android.intent.action.MASTER_CLEAR")
     def factory_reset(self):
-        pass
+        return self.output
 
     def install_packages(self, packages: List[str]):
         packages = [

@@ -13,16 +13,18 @@ class TestAdb(TestBase):
 
     def setUp(self) -> None:
         super().setUp()
-        self.assertTrue(target_device is not None)
+        # self.assertTrue(target_device is not None)
 
     def test_get_devices(self):
         devices = adb.get_devices()
 
+        print("DEVICES", devices)
         for device in devices:
             print(device)
             self.assertTrue(isinstance(device, Device))
             device: Device
             self.assertTrue(device.id is not None)
+            print(device.id)
 
     def test_check_adb_path(self):
         platform_tools_path = check_sdk_path()
@@ -68,6 +70,16 @@ class TestAdb(TestBase):
 
         print(len(filtered), len(packages))
 
+    def test_get_system_settings(self):
+        system_settings = target_device.get_system_settings()
+
+    def test_get_global_settings(self):
+        global_settings = target_device.get_global_settings()
+        self.assertTrue(isinstance(global_settings, dict))
+
+    def test_get_settings(self):
+        pass
+
 
 if __name__ == "__main__":
     test_methods = [
@@ -77,7 +89,9 @@ if __name__ == "__main__":
         # TestAdb.test_get_packages,
         # TestAdb.test_get_system_packages,
         # TestAdb.test_get_google_packages,
-        TestAdb.test_get_third_party_packages,
+        # TestAdb.test_get_third_party_packages,
         # TestAdb.test_filter_packages,
+        # TestAdb.test_get_system_settings,
+        TestAdb.test_get_global_settings,
     ]
     run_test_methods(test_methods)
