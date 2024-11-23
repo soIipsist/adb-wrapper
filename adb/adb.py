@@ -41,6 +41,7 @@ def command(command: str):
                     process.returncode, command_args, output.encode()
                 )
 
+            setattr(cls, "return_code", process.returncode)
             setattr(cls, "output", output)
             return func(cls, *args, **kwargs)
 
@@ -115,13 +116,24 @@ def get_google_packages():
 
 
 class ADB:
-
+    return_code = None
     output: str = None
-    google_packages: list = []
     sdk_path = None
 
     def __init__(self) -> None:
         self.sdk_path = check_sdk_path()
+
+    @command("tcpip")
+    def enable_tcpip_mode(self, port="5555"):
+        return self.output
+
+    @command("usb")
+    def enable_usb_mode(self):
+        return self.output
+
+    @command("connect")
+    def connect(self, device_ip: str):
+        return self.output
 
     @command("devices")
     def get_devices(self) -> List["Device"]:
@@ -268,11 +280,11 @@ class Device(ADB):
     def clear_password(self, password):
         return self.output
 
-    @command("shell pm list packages -f")
+    @command(f"shell pm list packages {PackageType.SYSTEM.value}")
     def get_system_packages(self):
         return self.output
 
-    @command("shell pm list packages -3")
+    @command(f"shell pm list packages {PackageType.THIRD_PARTY.value}")
     def get_third_party_packages(self):
         return self.output
 
@@ -365,8 +377,15 @@ class Device(ADB):
     def google_debloat(self):
         google_packages = get_google_packages()
         self.uninstall_packages(google_packages)
+        return self.output
 
-    def backup(self, shared_storage=False, apks=False, system=False, path: str = None):
+    def backup(
+        self,
+        shared_storage=False,
+        apks=False,
+        system=False,
+        destination_path: str = None,
+    ):
         cmd = ["backup", "-all"]
 
         if shared_storage:
@@ -378,11 +397,11 @@ class Device(ADB):
         if system:
             cmd.append("-system")
 
-        if path:
+        if destination_path:
             cmd.append("-f")
             # check if valid directory
-            directory = os.path.dirname(path)
-            file_name = os.path.basename(path)
+            directory = os.path.dirname(destination_path)
+            file_name = os.path.basename(destination_path)
             print(directory, file_name)
 
             if not os.path.isdir(directory):
@@ -390,9 +409,11 @@ class Device(ADB):
 
             if not file_name.endswith(".ab"):
                 raise FileNotFoundError("Backup files must be of .ab type.")
-            cmd.append(path)
+            cmd.append(destination_path)
 
+        cmd = " ".join(cmd)
         self.execute(cmd)
+        return self.output
 
     def get_setting_cmd(self, input):
         # format can be:
