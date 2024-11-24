@@ -1,7 +1,7 @@
 from pprint import PrettyPrinter
-from adb.utils import check_sdk_path
+from adb.utils import check_sdk_path, load_env
 from test_base import TestBase, run_test_methods
-from adb.adb import ADB, Device, Package, get_google_packages
+from adb.adb import ADB, Device, Package
 import os
 
 adb = ADB()
@@ -36,8 +36,20 @@ class TestAdb(TestBase):
         # print(os.environ.get("PATH"))
 
     def test_connect(self):
-        device_ip = ""
-        output = adb.connect()
+        load_env(file_path=".env")  # change .env path here if you want to test
+        device_ip = os.getenv("DEVICE_IP")
+        print(device_ip)
+
+        # output = adb.connect(device_ip)
+
+    def test_enable_usb_mode(self):
+        output = adb.enable_usb_mode()
+        print(output)
+
+    def test_enable_tcpip_mode(self):
+        port = "5555"
+        output = adb.enable_usb_mode(port)
+        print(output)
 
     def test_execute_command(self):
         output = adb.execute("version")
@@ -60,14 +72,14 @@ class TestAdb(TestBase):
         print(packages)
 
     def test_get_google_packages(self):
-        packages = get_google_packages()
+        packages = adb.get_google_packages()
         print(packages)
 
         self.assertTrue(all([isinstance(package, Package) for package in packages]))
         self.assertTrue(len(packages) == 126)
 
     def test_filter_packages(self):
-        packages = get_google_packages()
+        packages = adb.get_google_packages()
 
         filtered = Package.filter_packages(
             packages, name="Android Auto for phone screens"
@@ -209,36 +221,38 @@ class TestAdb(TestBase):
 
 if __name__ == "__main__":
     test_methods = [
-        TestAdb.test_check_adb_path,
-        TestAdb.test_get_devices,
+        # TestAdb.test_check_adb_path,
+        # TestAdb.test_get_devices,
         TestAdb.test_connect,
-        TestAdb.test_execute_command,
-        TestAdb.test_get_system_packages,
-        TestAdb.test_get_google_packages,
-        TestAdb.test_get_third_party_packages,
-        TestAdb.test_get_packages,
-        TestAdb.test_filter_packages,
-        TestAdb.test_get_system_settings,
-        TestAdb.test_get_global_settings,
-        TestAdb.test_get_secure_settings,
-        TestAdb.test_get_settings,
-        TestAdb.test_set_settings,
-        TestAdb.test_grant_permissions,
-        TestAdb.test_revoke_permissions,
-        TestAdb.test_install_package,
-        TestAdb.test_uninstall_package,
-        TestAdb.test_google_debloat,
-        TestAdb.test_disable_mobile_data,
-        TestAdb.test_enable_mobile_data,
-        TestAdb.test_disable_wifi,
-        TestAdb.test_enable_wifi,
-        TestAdb.test_backup,
-        TestAdb.test_restore,
-        TestAdb.test_push_file,
-        TestAdb.test_pull_file,
-        TestAdb.test_get_shell_property,
-        TestAdb.test_execute_touch_event,
-        TestAdb.test_expand_notifications,
-        TestAdb.test_factory_reset,
+        # TestAdb.test_enable_tcpip_mode,
+        # TestAdb.test_enable_usb_mode,
+        # TestAdb.test_execute_command,
+        # TestAdb.test_get_system_packages,
+        # TestAdb.test_get_google_packages,
+        # TestAdb.test_get_third_party_packages,
+        # TestAdb.test_get_packages,
+        # TestAdb.test_filter_packages,
+        # TestAdb.test_get_system_settings,
+        # TestAdb.test_get_global_settings,
+        # TestAdb.test_get_secure_settings,
+        # TestAdb.test_get_settings,
+        # TestAdb.test_set_settings,
+        # TestAdb.test_grant_permissions,
+        # TestAdb.test_revoke_permissions,
+        # TestAdb.test_install_package,
+        # TestAdb.test_uninstall_package,
+        # TestAdb.test_google_debloat,
+        # TestAdb.test_disable_mobile_data,
+        # TestAdb.test_enable_mobile_data,
+        # TestAdb.test_disable_wifi,
+        # TestAdb.test_enable_wifi,
+        # TestAdb.test_backup,
+        # TestAdb.test_restore,
+        # TestAdb.test_push_file,
+        # TestAdb.test_pull_file,
+        # TestAdb.test_get_shell_property,
+        # TestAdb.test_execute_touch_event,
+        # TestAdb.test_expand_notifications,
+        # TestAdb.test_factory_reset,
     ]
     run_test_methods(test_methods)

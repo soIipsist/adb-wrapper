@@ -117,3 +117,21 @@ def check_sdk_path():
             )
 
     return platform_tools_path
+
+
+def load_env(file_path=".env"):
+    """
+    Load environment variables from a .env file into the process environment.
+    """
+    if not os.path.exists(file_path):
+        raise FileNotFoundError(f"The .env file at {file_path} was not found.")
+
+    with open(file_path, "r") as file:
+        for line in file:
+            line = line.strip()
+            if not line or line.startswith("#"):
+                continue
+
+            key, sep, value = line.partition("=")
+            if sep:
+                os.environ[key.strip()] = value.strip()

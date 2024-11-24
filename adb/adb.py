@@ -101,27 +101,28 @@ class Package:
         return [package for package in packages if matches(package)]
 
 
-def get_google_packages():
-    packages = []
-
-    with resources.open_text(__package__, "google.json") as file:
-        packages = json.load(file)
-
-        for idx, package in enumerate(packages):
-            package: dict
-            package = Package(**package, package_type=PackageType.GOOGLE)
-            packages[idx] = package
-
-    return packages
-
-
 class ADB:
     return_code = None
     output: str = None
     sdk_path = None
+    google_packages: list = []
 
     def __init__(self) -> None:
         self.sdk_path = check_sdk_path()
+
+    def get_google_packages(self):
+        packages = []
+
+        with resources.open_text(__package__, "google.json") as file:
+            packages = json.load(file)
+
+            for idx, package in enumerate(packages):
+                package: dict
+                package = Package(**package, package_type=PackageType.GOOGLE)
+                packages[idx] = package
+
+        self.google_packages = packages
+        return packages
 
     @command("tcpip")
     def enable_tcpip_mode(self, port="5555"):
@@ -197,14 +198,14 @@ class Device(ADB):
         If no package type is specified, all packages are returned.
         """
         package_mapping = {
-            PackageType.GOOGLE: get_google_packages,
+            PackageType.GOOGLE: self.get_google_packages,
             PackageType.SYSTEM: self.get_system_packages,
             PackageType.THIRD_PARTY: self.get_third_party_packages,
         }
 
         if package_type is None:
             packages = (
-                set(get_google_packages())
+                set(self.get_google_packages())
                 | set(self.get_system_packages())
                 | set(self.get_third_party_packages())
             )
@@ -375,7 +376,7 @@ class Device(ADB):
             self.revoke_permission(package, p)
 
     def google_debloat(self):
-        google_packages = get_google_packages()
+        google_packages = self.get_google_packages()
         self.uninstall_packages(google_packages)
         return self.output
 
