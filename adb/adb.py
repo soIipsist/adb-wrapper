@@ -8,7 +8,7 @@ from functools import wraps
 from importlib import resources
 
 
-def command(command: str):
+def command(command: str, logging: bool = True):
     def decorator(func):
         @wraps(func)
         def wrapper(cls, *args, **kwargs):
@@ -25,6 +25,7 @@ def command(command: str):
                 command_args.insert(2, device_id)
 
             if args:
+                args = [str(arg) for arg in args]
                 command_args.extend(args)
 
             process = subprocess.Popen(
@@ -43,6 +44,10 @@ def command(command: str):
 
             setattr(cls, "return_code", process.returncode)
             setattr(cls, "output", output)
+
+            if logging:
+                print(output)
+
             return func(cls, *args, **kwargs)
 
         return wrapper
