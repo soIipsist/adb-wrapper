@@ -57,7 +57,7 @@ def command(command: str, logging: bool = True):
 
 class PackageType(str, Enum):
     THIRD_PARTY = "-3"
-    SYSTEM = "-f"
+    SYSTEM = "-s"
     GOOGLE = None
 
 
@@ -89,10 +89,10 @@ class Package:
         self.package_type = package_type
 
     def __repr__(self) -> str:
-        return f"<Package({self.package_name})>"
+        return f"{self.package_name}"
 
     def __str__(self) -> str:
-        return f"<Package({self.package_name})>"
+        return f"{self.package_name}"
 
     @classmethod
     def filter_packages(self, packages: list, **filters):
@@ -141,6 +141,10 @@ class ADB:
     def connect(self, device_ip: str):
         return self.output
 
+    @command("disconnect")
+    def disconnect(self, device_ip: str):
+        return self.output
+
     @command("devices")
     def get_devices(self) -> List["Device"]:
         """
@@ -158,12 +162,12 @@ class ADB:
                 devices.append(Device(id))
         return devices
 
-    def execute(self, command_args: str):
+    def execute(self, command_args: str, logging: bool = True):
         """
         Executes an adb command and returns its output.
         """
 
-        @command(command_args)
+        @command(command_args, logging)
         def run_command(cls):
             return cls.output
 
@@ -197,6 +201,8 @@ class Device(ADB):
         package_type: PackageType = None,
         package_name: str = None,
         name: str = None,
+        img_src: str = None,
+        genre: str = None,
     ):
         """
         Retrieve a list of packages based on the package type.
@@ -218,7 +224,12 @@ class Device(ADB):
             packages = set(package_mapping[package_type]())
 
         filtered_packages = Package.filter_packages(
-            packages, package_name=package_name, name=name, package_type=package_type
+            packages,
+            package_name=package_name,
+            name=name,
+            package_type=package_type,
+            img_src=img_src,
+            genre=genre,
         )
 
         return list(filtered_packages)
@@ -237,6 +248,15 @@ class Device(ADB):
                 settings[key.strip()] = value.strip()
 
         return settings
+
+    def parse_packages(self, packages: str) -> list[Package]:
+        packages = packages.strip().splitlines()
+
+        for idx, package in enumerate(packages):
+            package_name = package.split(":", 1)[1] if ":" in package else package
+            packages[idx] = Package(package_name=package_name)
+
+        return packages
 
     def get_settings(self):
         system_settings = self.get_system_settings()
@@ -286,21 +306,25 @@ class Device(ADB):
     def clear_password(self, password):
         return self.output
 
-    @command(f"shell pm list packages {PackageType.SYSTEM.value}")
+    @command(f"shell pm list packages {PackageType.SYSTEM.value}", logging=False)
     def get_system_packages(self):
-        return self.output
+        return self.parse_packages(self.output)
 
-    @command(f"shell pm list packages {PackageType.THIRD_PARTY.value}")
+    @command(f"shell pm list packages {PackageType.THIRD_PARTY.value}", logging=False)
     def get_third_party_packages(self):
-        return self.output
+        return self.parse_packages(self.output)
 
-    @command("install")
     def install_package(self, package):
-        return self.output
+        if isinstance(package, Package):
+            package = Package.package_name
 
-    @command("uninstall --user 0")
+        return self.execute(f"install {package}")
+
     def uninstall_package(self, package):
-        return self.output
+        if isinstance(package, Package):
+            package = Package.package_name
+
+        return self.execute(f"uninstall --user 0 {package}")
 
     @command("shell cmd statusbar expand-notifications")
     def expand_notifications(self):
@@ -344,18 +368,13 @@ class Device(ADB):
         return self.output
 
     def install_packages(self, packages: List[str]):
-        packages = [
-            Package(package_name=package) if isinstance(package, Package) else package
-            for package in packages
-        ]
-
         for p in packages:
             print("Installing package {0}...".format(p))
             self.install_package(p)
 
     def uninstall_packages(self, packages: List[str]):
         packages = [
-            Package(package_name=package) if isinstance(package, Package) else package
+            package
             for package in packages
             if package not in self.do_not_delete_packages
         ]

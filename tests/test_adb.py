@@ -15,7 +15,10 @@ class TestAdb(TestBase):
 
     def setUp(self) -> None:
         super().setUp()
-        # self.assertTrue(target_device is not None)
+        load_env(file_path=".env")  # change .env path here if you want to test
+        self.pc_path = os.getenv("PC_PATH")
+        self.device_path = os.getenv("DEVICE_PATH")
+        self.device_ip = os.getenv("DEVICE_IP")
 
     def test_get_devices(self):
         devices = adb.get_devices()
@@ -34,34 +37,41 @@ class TestAdb(TestBase):
         # print(os.environ.get("PATH"))
 
     def test_connect(self):
-        load_env(file_path=".env")  # change .env path here if you want to test
         device_ip = os.getenv("DEVICE_IP")
-        print(device_ip)
         output = adb.connect(device_ip)
+
+    def test_disconnect(self):
+        device_ip = os.getenv("DEVICE_IP")
+        adb.disconnect(device_ip)
 
     def test_enable_usb_mode(self):
         output = adb.enable_usb_mode()
 
     def test_enable_tcpip_mode(self):
         port = "5555"
-        output = adb.enable_usb_mode(port)
+        output = adb.enable_tcpip_mode(port)
 
     def test_execute_command(self):
         output = adb.execute("version")
-
-    def test_get_packages(self):
-        devices = adb.get_devices()
-        for device in devices:
-            device.get_packages()
 
     def test_get_packages(self):
         packages = target_device.get_packages()
 
     def test_get_third_party_packages(self):
         packages = target_device.get_third_party_packages()
+        print(packages)
+
+        self.assertTrue(
+            all(isinstance(package, Package) for package in packages),
+        )
 
     def test_get_system_packages(self):
         packages = target_device.get_system_packages()
+        print(packages)
+
+        self.assertTrue(
+            all(isinstance(package, Package) for package in packages),
+        )
 
     def test_get_google_packages(self):
         packages = adb.get_google_packages()
@@ -198,11 +208,12 @@ if __name__ == "__main__":
         # TestAdb.test_check_adb_path,
         # TestAdb.test_get_devices,
         # TestAdb.test_connect,
+        # TestAdb.test_disconnect,
         # TestAdb.test_enable_tcpip_mode,
         # TestAdb.test_enable_usb_mode,
         # TestAdb.test_execute_command,
         # TestAdb.test_get_system_packages,
-        # TestAdb.test_get_google_packages,
+        TestAdb.test_get_google_packages,
         # TestAdb.test_get_third_party_packages,
         # TestAdb.test_get_packages,
         # TestAdb.test_filter_packages,
@@ -225,7 +236,7 @@ if __name__ == "__main__":
         # TestAdb.test_push_file,
         # TestAdb.test_pull_file,
         # TestAdb.test_get_shell_property,
-        TestAdb.test_execute_touch_event,
+        # TestAdb.test_execute_touch_event,
         # TestAdb.test_expand_notifications,
         # TestAdb.test_factory_reset,
     ]
