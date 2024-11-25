@@ -168,12 +168,12 @@ class ADB:
                 devices.append(Device(id))
         return devices
 
-    def execute(self, command_args: str, logging: bool = True):
+    def execute(self, command_args: str, logging: bool = True, base_cmd: str = "adb"):
         """
         Executes an adb command and returns its output.
         """
 
-        @command(command_args, logging)
+        @command(command_args, logging, base_cmd)
         def run_command(cls):
             return cls.output
 
@@ -196,12 +196,33 @@ class Device(ADB):
     def root(
         self, root_method: RootMethod = RootMethod.MAGISK, image_path: str = "boot.img"
     ):
-        if root_method == RootMethod.MAGISK:
-            self.root_magisk(image_path)
-        elif root_method == RootMethod.APATCH:
-            self.root_apatch(image_path)
-        elif root_method == RootMethod.KERNELSU:
-            self.root_kernel_su(image_path)
+        try:
+            bootloader_status = self.get_bootloader_status()
+            if bootloader_status.strip() == "1":
+                print("Your bootloader is locked. Unlock it before proceeding.")
+                return
+            if root_method == RootMethod.MAGISK:
+                self.root_magisk(image_path)
+            elif root_method == RootMethod.APATCH:
+                self.root_apatch(image_path)
+            elif root_method == RootMethod.KERNELSU:
+                self.root_kernel_su(image_path)
+            else:
+                print("Invalid root method selected.")
+        except RuntimeError as e:
+            print(f"Error during rooting process: {e}")
+
+    def _flash_image(self, image_path: str):
+        if not os.path.exists(image_path):
+            raise FileNotFoundError(f"Patched boot image '{image_path}' not found.")
+        print("Rebooting device into bootloader...")
+        self.reboot_bootloader()
+
+        print("Flashing patched boot image...")
+        self.fastboot_flash_boot(image_path)
+
+        print("Rebooting device...")
+        self.fastboot_reboot()
 
     def root_magisk(self, image_path: str):
         print("Magisk Root Method")
@@ -216,6 +237,8 @@ class Device(ADB):
         )
         print("6. Press Enter to continue and flash the patched image.\n")
 
+        return self._flash_image(image_path)
+
     def root_apatch(self, image_path: str):
         print("Apatch Root Method")
         print("1. Install the Apatch app on your Android device.")
@@ -226,6 +249,8 @@ class Device(ADB):
             "5. Transfer the patched boot image back to your computer and save it as boot.img in this script's directory."
         )
         print("6. Press Enter to continue and flash the patched image.\n")
+
+        return self._flash_image(image_path)
 
     def root_kernel_su(self, image_path: str):
         print("KernelSU Root Method")
@@ -238,8 +263,11 @@ class Device(ADB):
         )
         print("3. Press Enter to continue and flash the patched image.\n")
 
-    def flash_image(self, image_path: str):
-        return
+        return self._flash_image(image_path)
+
+    @command("reboot bootloader")
+    def reboot_bootloader(self):
+        return self.output
 
     # fastboot commands
     @command("flash boot", base_cmd="fastboot")
@@ -250,11 +278,11 @@ class Device(ADB):
     def fastboot_reboot(self):
         return self.output
 
-    @command("reboot bootloader")
-    def reboot_bootloader(self):
+    @command("flashing unlock", base_cmd="fastboot")
+    def unlock_bootloader(self):
         return self.output
 
-    @command("adb shell getprop ro.boot.flash.locked")
+    @command("shell getprop ro.boot.flash.locked")
     def get_bootloader_status(self):
         return self.output
 
