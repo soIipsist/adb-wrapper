@@ -67,10 +67,10 @@ class SettingsType(str, Enum):
     SYSTEM = "system"
 
 
-class RootMethod(str, Enum):
-    MAGISK = "magisk"
-    APATCH = "apatch"
-    KERNEL_SU = "kernel_su"
+class RootMethod(Enum):
+    MAGISK = "Magisk"
+    APATCH = "Apatch"
+    KERNELSU = "KernelSU"
 
 
 class Package:
@@ -193,21 +193,66 @@ class Device(ADB):
     def __init__(self, id) -> None:
         self.id = id
 
-    # def root(self, root_method: RootMethod = RootMethod.MAGISK):
-    #     pass
+    def root(
+        self, root_method: RootMethod = RootMethod.MAGISK, image_path: str = "boot.img"
+    ):
+        if root_method == RootMethod.MAGISK:
+            self.root_magisk(image_path)
+        elif root_method == RootMethod.APATCH:
+            self.root_apatch(image_path)
+        elif root_method == RootMethod.KERNELSU:
+            self.root_kernel_su(image_path)
 
-    # @command("")
-    # def unlock_bootloader(self):
-    #     pass
+    def root_magisk(self, image_path: str):
+        print("Magisk Root Method")
+        print("1. Install the Magisk app on your Android device.")
+        print(
+            "2. Extract the stock boot image from your device's firmware. (Ensure the firmware matches your current OS version.)"
+        )
+        print("3. Copy the extracted boot image to your device.")
+        print("4. Open the Magisk app and use it to patch the boot image.")
+        print(
+            "5. Transfer the patched boot image back to your computer and save it as boot.img in this script's directory."
+        )
+        print("6. Press Enter to continue and flash the patched image.\n")
 
-    # def root_magisk(self):
-    #     pass
+    def root_apatch(self, image_path: str):
+        print("Apatch Root Method")
+        print("1. Install the Apatch app on your Android device.")
+        print("2. Extract the stock boot image from your device's firmware.")
+        print("3. Copy the extracted boot image to your device.")
+        print("4. Open the Apatch app and use it to patch the boot image.")
+        print(
+            "5. Transfer the patched boot image back to your computer and save it as boot.img in this script's directory."
+        )
+        print("6. Press Enter to continue and flash the patched image.\n")
 
-    # def root_apash(self):
-    #     pass
+    def root_kernel_su(self, image_path: str):
+        print("KernelSU Root Method")
+        print(
+            "1. Download a KernelSU-patched boot image that matches your device and current firmware version."
+        )
+        print("   - Look for the correct image on trusted sources or forums.")
+        print(
+            "2. Place the downloaded boot image in this script's directory and rename it to boot.img."
+        )
+        print("3. Press Enter to continue and flash the patched image.\n")
 
-    # def root_kernel_su(self):
-    #     pass
+    def flash_image(self, image_path: str):
+        return
+
+    # fastboot commands
+    @command("flash boot", base_cmd="fastboot")
+    def fastboot_flash_boot(self, image_path: str):
+        return self.output
+
+    @command("reboot", base_cmd="fastboot")
+    def fastboot_reboot(self):
+        return self.output
+
+    @command("reboot bootloader")
+    def reboot_bootloader(self):
+        return self.output
 
     @command("adb shell getprop ro.boot.flash.locked")
     def get_bootloader_status(self):

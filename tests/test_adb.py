@@ -19,6 +19,8 @@ class TestAdb(TestBase):
         self.pc_path = os.getenv("PC_PATH")
         self.device_path = os.getenv("DEVICE_PATH")
         self.device_ip = os.getenv("DEVICE_IP")
+        self.package = os.getenv("PACKAGE")
+        self.backup_path = os.getenv("BACKUP_FILE_PATH")
 
     def test_get_devices(self):
         devices = adb.get_devices()
