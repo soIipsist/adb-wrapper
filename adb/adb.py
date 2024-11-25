@@ -193,20 +193,21 @@ class Device(ADB):
     def __init__(self, id) -> None:
         self.id = id
 
-    def root(
-        self, root_method: RootMethod = RootMethod.MAGISK, image_path: str = "boot.img"
-    ):
+    def root(self, root_method: RootMethod = RootMethod.MAGISK, image_path: str = None):
+        if image_path is None:
+            image_path = "boot.img"
+
         try:
             bootloader_status = self.get_bootloader_status()
             if bootloader_status.strip() == "1":
                 print("Your bootloader is locked. Unlock it before proceeding.")
                 return
             if root_method == RootMethod.MAGISK:
-                self.root_magisk(image_path)
+                self._root_magisk(image_path)
             elif root_method == RootMethod.APATCH:
-                self.root_apatch(image_path)
+                self._root_apatch(image_path)
             elif root_method == RootMethod.KERNELSU:
-                self.root_kernel_su(image_path)
+                self._root_kernel_su(image_path)
             else:
                 print("Invalid root method selected.")
         except RuntimeError as e:
@@ -224,7 +225,7 @@ class Device(ADB):
         print("Rebooting device...")
         self.fastboot_reboot()
 
-    def root_magisk(self, image_path: str):
+    def _root_magisk(self, image_path: str):
         print("Magisk Root Method")
         print("1. Install the Magisk app on your Android device.")
         print(
@@ -239,7 +240,7 @@ class Device(ADB):
 
         return self._flash_image(image_path)
 
-    def root_apatch(self, image_path: str):
+    def _root_apatch(self, image_path: str):
         print("Apatch Root Method")
         print("1. Install the Apatch app on your Android device.")
         print("2. Extract the stock boot image from your device's firmware.")
@@ -252,7 +253,7 @@ class Device(ADB):
 
         return self._flash_image(image_path)
 
-    def root_kernel_su(self, image_path: str):
+    def _root_kernel_su(self, image_path: str = "boot.img"):
         print("KernelSU Root Method")
         print(
             "1. Download a KernelSU-patched boot image that matches your device and current firmware version."
