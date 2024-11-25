@@ -22,7 +22,7 @@ Android Debug Bridge version 1.0.41
 ### Pip (Linux, Windows)
 
 ```bash
-pip install git+https://github.com/soIipsis/adb-wrapper@main
+pip install git+https://github.com/soIipsist/adb-wrapper@main
 ```
 
 ### Manual installation
@@ -30,7 +30,7 @@ pip install git+https://github.com/soIipsis/adb-wrapper@main
 Clone the git repository:
 
 ```bash
-git clone https://github.com/soIipsis/adb-wrapper@main
+git clone https://github.com/soIipsist/adb-wrapper@main
 ```
 
 ## Usage
@@ -53,4 +53,4 @@ for device in devices:
     device.google_debloat()
 ```
 
-See [commands.py](https://github.com/soIipsis/adb-wrapper/blob/main/examples/commands.py) for an example script showcasing all supported commands.
+See [commands.py](https://github.com/soIipsist/adb-wrapper/blob/main/examples/commands.py) for an example script showcasing all supported commands.

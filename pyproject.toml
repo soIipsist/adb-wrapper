@@ -1,10 +1,7 @@
 [project]
-authors = [
-  {name = "soIipsis"},
-]
-dependencies = ["wget"]
+authors = [{ name = "soIipsist" }]
 description = "A Python ADB wrapper for executing commands on multiple devices."
-license = {text = "MIT License"}
+license = { text = "MIT License" }
 name = "adb-wrapper"
 readme = "README.md"
 requires-python = ">=3.6"

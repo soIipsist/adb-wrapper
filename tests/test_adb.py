@@ -105,10 +105,10 @@ class TestAdb(TestBase):
         settings = target_device.get_settings()
         global_settings = settings.get("global")
 
-    def test_install_package(self):
+    def test_install_packages(self):
         output = target_device.install_package("com.google.android.apps.youtube.music")
 
-    def test_uninstall_package(self):
+    def test_uninstall_packages(self):
         output = target_device.uninstall_package(
             "com.google.android.apps.youtube.music"
         )
@@ -213,7 +213,7 @@ if __name__ == "__main__":
         # TestAdb.test_enable_usb_mode,
         # TestAdb.test_execute_command,
         # TestAdb.test_get_system_packages,
-        TestAdb.test_get_google_packages,
+        # TestAdb.test_get_google_packages,
         # TestAdb.test_get_third_party_packages,
         # TestAdb.test_get_packages,
         # TestAdb.test_filter_packages,
@@ -224,8 +224,8 @@ if __name__ == "__main__":
         # TestAdb.test_set_settings,
         # TestAdb.test_grant_permissions,
         # TestAdb.test_revoke_permissions,
-        # TestAdb.test_install_package,
-        # TestAdb.test_uninstall_package,
+        TestAdb.test_install_packages,
+        TestAdb.test_uninstall_packages,
         # TestAdb.test_google_debloat,
         # TestAdb.test_disable_mobile_data,
         # TestAdb.test_enable_mobile_data,

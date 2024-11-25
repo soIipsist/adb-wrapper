@@ -8,7 +8,7 @@ from functools import wraps
 from importlib import resources
 
 
-def command(command: str, logging: bool = True):
+def command(command: str, logging: bool = True, base_cmd="adb"):
     def decorator(func):
         @wraps(func)
         def wrapper(cls, *args, **kwargs):
@@ -17,7 +17,7 @@ def command(command: str, logging: bool = True):
                 raise TypeError("command is not of type string.")
 
             command_args = shlex.split(command)
-            command_args.insert(0, "adb")
+            command_args.insert(0, base_cmd)
 
             if isinstance(cls, Device):
                 device_id = getattr(cls, "id")
@@ -65,6 +65,12 @@ class SettingsType(str, Enum):
     SECURE = "secure"
     GLOBAL = "global"
     SYSTEM = "system"
+
+
+class RootMethod(str, Enum):
+    MAGISK = "magisk"
+    APATCH = "apatch"
+    KERNEL_SU = "kernel_su"
 
 
 class Package:
@@ -186,6 +192,26 @@ class Device(ADB):
 
     def __init__(self, id) -> None:
         self.id = id
+
+    # def root(self, root_method: RootMethod = RootMethod.MAGISK):
+    #     pass
+
+    # @command("")
+    # def unlock_bootloader(self):
+    #     pass
+
+    # def root_magisk(self):
+    #     pass
+
+    # def root_apash(self):
+    #     pass
+
+    # def root_kernel_su(self):
+    #     pass
+
+    @command("adb shell getprop ro.boot.flash.locked")
+    def get_bootloader_status(self):
+        return self.output
 
     def get_model(self):
         return self.get_shell_property("ro.product.model")
