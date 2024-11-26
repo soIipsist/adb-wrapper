@@ -168,7 +168,7 @@ class ADB:
                 if not sdk_path:
                     raise RuntimeError("Failed to download SDK platform-tools.")
 
-                set_environment_variable(sdk_path)
+                set_path_environment_variable(sdk_path)
                 return str(sdk_path)
             else:
                 raise FileNotFoundError(

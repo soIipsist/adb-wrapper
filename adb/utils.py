@@ -26,54 +26,54 @@ def download_sdk_platform_tools(output_directory=None):
     return sdk_path
 
 
-def set_environment_variable(sdk_path: str, set_globally: bool = False):
+def set_path_environment_variable(value: str, set_globally: bool = False):
+    """Sets sdk path as a PATH environment variable."""
+
     if set_globally:
-        set_path_env_variable_globally()
+        try:
+            if os.name == "nt":
+                subprocess.run(["setx", key, value], check=True)
+            else:
+                # Modify shell configuration files for macOS or Linux
+                home_dir = os.path.expanduser("~")
+                shell = os.getenv("SHELL", "/bin/bash")
+                config_file = None
+
+                # Determine the shell configuration file
+                if shell.endswith("bash"):
+                    config_file = os.path.join(home_dir, ".bashrc")
+                elif shell.endswith("zsh"):
+                    config_file = os.path.join(home_dir, ".zshrc")
+                elif shell.endswith("fish"):
+                    config_file = os.path.join(home_dir, ".config/fish/config.fish")
+                else:
+                    raise EnvironmentError(f"Unsupported shell: {shell}")
+
+                if config_file:
+                    with open(config_file, "a") as f:
+                        f.write(f'\nexport PATH="{os.getenv("PATH")}:{value}"\n')
+
+                    print(f"PATH variable updated in {config_file}.")
+                else:
+                    raise FileNotFoundError(
+                        "Shell configuration file could not be determined."
+                    )
+
+            try:
+                subprocess.run(["source", f"{config_file}"], check=True)
+            except Exception as e:
+                print(e)
+
+        except Exception as e:
+            print(f"An error occurred while setting the environment variable: {e}")
+
     else:
         if os.name == "nt":  # Windows
-            os.environ["PATH"] += f";{sdk_path}"
+            os.environ["PATH"] += f";{value}"
         else:  # macOS/Linux
-            os.environ["PATH"] += f":{sdk_path}"
+            os.environ["PATH"] += f":{value}"
 
-    print(f"Added '{sdk_path}' to the PATH environment variable.")
-
-
-def set_path_env_variable_globally(value, shell_restart_required=True):
-    """
-    Sets an environment variable globally, not just for the current process.
-
-    """
-
-    try:
-        if os.name == "nt":
-            subprocess.run(["setx", key, value], check=True)
-        else:
-            # Modify shell configuration files for macOS or Linux
-            home_dir = os.path.expanduser("~")
-            shell = os.getenv("SHELL", "/bin/bash")
-            config_file = None
-
-            # Determine the shell configuration file
-            if shell.endswith("bash"):
-                config_file = os.path.join(home_dir, ".bashrc")
-            elif shell.endswith("zsh"):
-                config_file = os.path.join(home_dir, ".zshrc")
-            elif shell.endswith("fish"):
-                config_file = os.path.join(home_dir, ".config/fish/config.fish")
-            else:
-                raise EnvironmentError(f"Unsupported shell: {shell}")
-
-        # Notify about shell restart if needed
-        if shell_restart_required:
-            print(
-                f"To apply the changes globally, restart your terminal or run `source ~/.bashrc` "
-                f"(or equivalent for your shell)."
-            )
-
-        return True
-    except Exception as e:
-        print(f"An error occurred while setting the environment variable: {e}")
-        return False
+    print(f"Added '{value}' to the PATH environment variable.")
 
 
 def load_env(file_path=".env"):

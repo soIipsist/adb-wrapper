@@ -3,6 +3,7 @@ from adb.utils import (
     load_env,
     download_file_from_link,
     download_sdk_platform_tools,
+    set_path_environment_variable,
 )
 from test_base import TestBase, run_test_methods
 from adb.adb import (
@@ -263,6 +264,11 @@ class TestAdb(TestBase):
 
         self.assertTrue(os.path.exists(output_path))
 
+    def test_set_environment_variable(self):
+
+        # set locally
+        set_path_environment_variable()
+
 
 if __name__ == "__main__":
     adb_methods = [
@@ -315,7 +321,9 @@ if __name__ == "__main__":
     util_methods = [
         # TestAdb.test_load_env,
         # TestAdb.test_download_link,
-        TestAdb.test_download_sdk_platform_tools,
+        # TestAdb.test_download_sdk_platform_tools,
+        TestAdb.test_set_environment_variable,
+        # TestAdb.test_set_environment_variable,
     ]
 
     # methods = adb_methods
