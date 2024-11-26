@@ -238,6 +238,13 @@ class ADB:
                 devices.append(Device(id))
         return devices
 
+    def get_device(self, device_id: str = None):
+        devices = self.get_devices()
+        return next(
+            (device for device in devices if not device_id or device.id == device_id),
+            None,
+        )
+
     def execute(self, command_args: str, logging: bool = True, base_cmd: str = "adb"):
         """
         Executes an adb command and returns its output.

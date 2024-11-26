@@ -337,8 +337,8 @@ if __name__ == "__main__":
     util_methods = [
         # TestAdb.test_load_env,
         # TestAdb.test_download_link,
-        TestAdb.test_download_sdk_platform_tools,
-        # TestAdb.test_set_path_environment_variable,
+        # TestAdb.test_download_sdk_platform_tools,
+        TestAdb.test_set_path_environment_variable,
         # TestAdb.test_find_variable_in_path,
     ]
 

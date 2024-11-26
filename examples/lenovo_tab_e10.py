@@ -2,7 +2,9 @@ from adb.adb import ADB, Device
 import argparse
 import os
 
-""" A sample script that was tested on Lenovo Tab E10 tablets """
+"""
+A practical example of a script designed to automate the installation of an APK file on multiple Lenovo Tab E10 tablets.
+The script also removes the Lenovo Launcher and fully restricts the tablet's functionality to the installed app."""
 
 
 def is_valid_file(parser: argparse.ArgumentParser, arg: str):
