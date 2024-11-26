@@ -262,13 +262,18 @@ class TestAdb(TestBase):
     def test_download_sdk_platform_tools(self):
         output_directory = os.getcwd()
         output_path = download_sdk_platform_tools(output_directory)
-
         self.assertTrue(os.path.exists(output_path))
 
-    def test_set_environment_variable(self):
+    def test_set_path_environment_variable(self):
         # set locally
-        set_path_environment_variable("/Users/p")
-        # self.assertTrue()
+        variable = "/Users/p/"
+        set_path_environment_variable(variable)
+        self.assertTrue(find_variable_in_path(variable) == variable)
+
+        # set globally
+        set_path_environment_variable(variable, set_globally=True)
+        self.assertTrue(find_variable_in_path(variable) == variable)
+        print(os.environ.get("PATH"))
 
     def test_find_variable_in_path(self):
         sdk_path = find_variable_in_path("platform-tools")
@@ -328,7 +333,7 @@ if __name__ == "__main__":
         # TestAdb.test_load_env,
         # TestAdb.test_download_link,
         # TestAdb.test_download_sdk_platform_tools,
-        TestAdb.test_set_environment_variable,
+        TestAdb.test_set_path_environment_variable,
         # TestAdb.test_find_variable_in_path,
     ]
 

@@ -127,17 +127,29 @@ class ADB:
     sdk_path = None
     google_packages: list = []
 
-    def __init__(self) -> None:
-        self.sdk_path = self.check_sdk_path()
+    _global_env: bool = False
 
-    def check_sdk_path(self):
+    def __init__(self, global_env: bool = False) -> None:
+        self.global_env = global_env
+        self.sdk_path = self.check_sdk_path(self.global_env)
+
+    @property
+    def global_env(self):
+        return self._global_env
+
+    @global_env.setter
+    def global_env(self, global_env: bool):
+        self._global_env = global_env
+
+    def check_sdk_path(self, set_globally: bool = False):
         """
         Checks if 'platform-tools' exists in the PATH environment variable.
         Prompts the user to download it if not found and returns the platform-tools directory.
         """
+
         sdk_path = find_variable_in_path("platform-tools")
 
-        if not sdk_path:
+        if not sdk_path:  # download sdk platform tools, if adb doesn't exist in PATH
             user_input = (
                 input(
                     "ADB was not found in your PATH environment variable. "
@@ -162,7 +174,7 @@ class ADB:
                 if not sdk_path:
                     raise RuntimeError("Failed to download SDK platform-tools.")
 
-                set_path_environment_variable(sdk_path)
+                set_path_environment_variable(sdk_path, set_globally)
                 return str(sdk_path)
             else:
                 raise FileNotFoundError(

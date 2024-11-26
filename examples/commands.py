@@ -15,13 +15,8 @@ output = adb.execute("devices -l")
 # which is the same as executing
 output = adb.execute(["devices", "-l"])
 
-# get packages from list
-packages = adb.get_packages_from_json("lists/google.json", key="package_name")
-
-# download sdk platform-tools (can be used if adb is not installed on your device)
-from adb.adb import download_sdk_platform_tools
-
-download_sdk_platform_tools()
+# get google packages
+packages = adb.get_google_packages()
 
 device: Device
 for device in devices:

@@ -63,18 +63,27 @@ def set_path_environment_variable(value: str, set_globally: bool = False):
 
                 if config_file:
                     with open(config_file, "a") as f:
-                        f.write(f'\nexport PATH="{os.getenv("PATH")}:{value}"\n')
+                        f.write(f'\nexport PATH="{value}:$PATH"\n')
 
-                    print(f"PATH variable updated in {config_file}.")
+                    prompt = input(
+                        f"PATH variable was updated in {config_file}. Would you like to execute it? (y/n)"
+                    )
+
+                    if prompt == "y":
+                        subprocess.run(
+                            f"source {config_file}",
+                            shell=True,
+                            check=True,
+                            cwd=home_dir,
+                        )
+                        print("Sourced config file successfully.")
+
+                    else:
+                        os.environ["PATH"] = f"{value}:$PATH"
                 else:
                     raise FileNotFoundError(
                         "Shell configuration file could not be determined."
                     )
-
-            try:
-                subprocess.run(["source", f"{config_file}"], check=True)
-            except Exception as e:
-                print(e)
 
         except Exception as e:
             print(f"An error occurred while setting the environment variable: {e}")
