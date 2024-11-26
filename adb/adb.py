@@ -135,14 +135,7 @@ class ADB:
         Checks if 'platform-tools' exists in the PATH environment variable.
         Prompts the user to download it if not found and returns the platform-tools directory.
         """
-        path_variable = os.environ.get("PATH", "")
-
-        sdk_path = None
-
-        for path in path_variable.split(os.pathsep):
-            if "platform-tools" in path and Path(path).is_dir():
-                sdk_path = path
-                break
+        sdk_path = find_variable_in_path("platform-tools")
 
         if not sdk_path:
             user_input = (
@@ -165,6 +158,7 @@ class ADB:
                 )
 
                 sdk_path = download_sdk_platform_tools(download_dir)
+
                 if not sdk_path:
                     raise RuntimeError("Failed to download SDK platform-tools.")
 

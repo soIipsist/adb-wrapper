@@ -4,6 +4,7 @@ from adb.utils import (
     download_file_from_link,
     download_sdk_platform_tools,
     set_path_environment_variable,
+    find_variable_in_path,
 )
 from test_base import TestBase, run_test_methods
 from adb.adb import (
@@ -265,9 +266,14 @@ class TestAdb(TestBase):
         self.assertTrue(os.path.exists(output_path))
 
     def test_set_environment_variable(self):
-
         # set locally
-        set_path_environment_variable()
+        set_path_environment_variable("/Users/p")
+        # self.assertTrue()
+
+    def test_find_variable_in_path(self):
+        sdk_path = find_variable_in_path("platform-tools")
+        print(sdk_path)
+        self.assertTrue(os.path.exists(sdk_path))
 
 
 if __name__ == "__main__":
@@ -323,7 +329,7 @@ if __name__ == "__main__":
         # TestAdb.test_download_link,
         # TestAdb.test_download_sdk_platform_tools,
         TestAdb.test_set_environment_variable,
-        # TestAdb.test_set_environment_variable,
+        # TestAdb.test_find_variable_in_path,
     ]
 
     # methods = adb_methods

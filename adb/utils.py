@@ -26,6 +26,18 @@ def download_sdk_platform_tools(output_directory=None):
     return sdk_path
 
 
+def find_variable_in_path(value: str):
+    path_variable = os.environ.get("PATH", "")
+    path_variable = path_variable.split(os.pathsep)
+    variable = None
+    for path in path_variable:
+        normalized_path = os.path.normpath(path)
+        if value == os.path.basename(normalized_path) or value == path:
+            variable = path
+            break
+    return variable
+
+
 def set_path_environment_variable(value: str, set_globally: bool = False):
     """Sets sdk path as a PATH environment variable."""
 
