@@ -1,6 +1,5 @@
 import mimetypes
 import os
-from pathlib import Path
 import shutil
 import platform
 import subprocess
@@ -19,10 +18,9 @@ def download_sdk_platform_tools(output_directory=None):
 
     platform_str = platform.system().lower()
     download_link = f"https://dl.google.com/android/repository/platform-tools-latest-{platform_str}.zip"
-    output_path = os.path.join(output_directory, os.path.basename(download_link))
 
-    print("SDK path set to: ", output_path)
-    sdk_path = download_file_from_link(download_link, output_path)
+    output_directory = os.path.join(output_directory, "platform-tools.zip")
+    sdk_path = download_file_from_link(download_link, output_directory)
     return sdk_path
 
 
@@ -131,8 +129,7 @@ def load_env(file_path=".env"):
 def download_file_from_link(download_link, output_path=None):
     """
     Download a file from a given link and save it to the specified output path.
-    If the file is an archive, it is automatically extracted, and the extracted path is returned.
-
+    Archived or zipped files are extracted, and returned as extracted paths.
     """
     try:
         # Determine the output path and directory
@@ -165,6 +162,17 @@ def download_file_from_link(download_link, output_path=None):
             shutil.unpack_archive(output_path, extracted_dir)
             os.remove(output_path)
             print(f"File extracted to: {extracted_dir}")
+
+            # Handle nested folders (e.g., platform-tools/platform-tools)
+            contents = os.listdir(extracted_dir)
+            if len(contents) == 1:
+                nested_path = os.path.join(extracted_dir, contents[0])
+                if os.path.isdir(nested_path):
+                    print("Detected nested folder, flattening structure...")
+                    for item in os.listdir(nested_path):
+                        shutil.move(os.path.join(nested_path, item), extracted_dir)
+                    shutil.rmtree(nested_path)
+
             return extracted_dir
 
         return output_path

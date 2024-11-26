@@ -26,6 +26,8 @@ environment_variables = load_env(
 )  # change .env path here if you want to test
 
 pc_path = environment_variables.get("PC_PATH")
+apk_pc_path = environment_variables.get("APK_PC_PATH")
+apk_device_path = environment_variables.get("APK_DEVICE_PATH")
 device_path = environment_variables.get("DEVICE_PATH")
 device_ip = environment_variables.get("DEVICE_IP")
 package = environment_variables.get("PACKAGE")
@@ -135,11 +137,9 @@ class TestAdb(TestBase):
         )
 
     def test_grant_permissions(self):
-        permissions = []
         target_device.grant_permissions(package, permissions)
 
     def test_revoke_permissions(self):
-        permissions = []
         target_device.revoke_permissions(package, permissions)
 
     def test_google_debloat(self):
@@ -260,9 +260,14 @@ class TestAdb(TestBase):
         print(output_path)
 
     def test_download_sdk_platform_tools(self):
+        # with output directory defined
         output_directory = os.getcwd()
-        output_path = download_sdk_platform_tools(output_directory)
-        self.assertTrue(os.path.exists(output_path))
+        sdk_path = download_sdk_platform_tools(output_directory)
+        self.assertTrue(os.path.exists(sdk_path))
+
+        # with output directory not defined
+        sdk_path = download_sdk_platform_tools()
+        self.assertTrue(os.path.exists(sdk_path))
 
     def test_set_path_environment_variable(self):
         # set locally
@@ -332,8 +337,8 @@ if __name__ == "__main__":
     util_methods = [
         # TestAdb.test_load_env,
         # TestAdb.test_download_link,
-        # TestAdb.test_download_sdk_platform_tools,
-        TestAdb.test_set_path_environment_variable,
+        TestAdb.test_download_sdk_platform_tools,
+        # TestAdb.test_set_path_environment_variable,
         # TestAdb.test_find_variable_in_path,
     ]
 
