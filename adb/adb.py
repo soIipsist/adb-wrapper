@@ -73,6 +73,14 @@ class RootMethod(Enum):
     KERNELSU = "KernelSU"
 
 
+magisk_url = (
+    "https://github.com/topjohnwu/Magisk/releases/download/v28.0/Magisk-v28.0.apk"
+)
+
+apatch_url = "https://github.com/bmax121/APatch/releases/download/10763/APatch_10763_10763-release-signed.apk"
+kernelsu_url = "https://github.com/tiann/KernelSU/releases/download/v1.0.2/KernelSU_v1.0.2_11986-release.apk"
+
+
 class Package:
     img_src = None
     package_name = None
@@ -143,12 +151,19 @@ class ADB:
     def enable_usb_mode(self):
         return self.output
 
-    @command("connect")
-    def connect(self, device_ip: str):
+    def connect(self, device_ip: str, kill_server: bool = False):
+        if kill_server:
+            self.execute("kill server")
+        self.execute(f"connect {device_ip}")
+
         return self.output
 
     @command("disconnect")
     def disconnect(self, device_ip: str):
+        return self.output
+
+    @command("shell ip route")
+    def get_device_ip(self):
         return self.output
 
     @command("devices")

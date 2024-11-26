@@ -7,19 +7,23 @@ import os
 adb = ADB()
 devices = adb.get_devices()
 target_device = devices[0] if len(devices) > 0 else None
+environment_variables = load_env(
+    file_path=".env"
+)  # change .env path here if you want to test
+
+pc_path = environment_variables.get("PC_PATH")
+device_path = environment_variables.get("DEVICE_PATH")
+device_ip = environment_variables.get("DEVICE_IP")
+package = environment_variables.get("PACKAGE")
+backup_path = environment_variables.get("BACKUP_FILE_PATH")
+image_path = environment_variables.get("IMAGE_PATH")
+permissions = environment_variables.get("PERMISSIONS")
 
 
 class TestAdb(TestBase):
 
     def setUp(self) -> None:
         super().setUp()
-        load_env(file_path=".env")  # change .env path here if you want to test
-        self.pc_path = os.getenv("PC_PATH")
-        self.device_path = os.getenv("DEVICE_PATH")
-        self.device_ip = os.getenv("DEVICE_IP")
-        self.package = os.getenv("PACKAGE")
-        self.backup_path = os.getenv("BACKUP_FILE_PATH")
-        self.image_path = os.getenv("IMAGE_PATH")
 
     def test_get_devices(self):
         devices = adb.get_devices()
@@ -30,21 +34,22 @@ class TestAdb(TestBase):
             self.assertTrue(device.id is not None)
             print(device.id)
 
-    def test_check_adb_path(self):
+    def test_check_sdk_path(self):
         platform_tools_path = check_sdk_path()
 
+        print(platform_tools_path)
         self.assertTrue(platform_tools_path is not None)
         self.assertTrue(os.path.exists(platform_tools_path))
         # print(os.environ.get("PATH"))
 
     def test_connect(self):
-        device_ip = os.getenv("DEVICE_IP")
         output = adb.connect(device_ip)
-        print(output)
 
     def test_disconnect(self):
-        device_ip = os.getenv("DEVICE_IP")
         adb.disconnect(device_ip)
+
+    def test_get_ip(self):
+        adb.get_device_ip()
 
     def test_enable_usb_mode(self):
         output = adb.enable_usb_mode()
@@ -117,11 +122,11 @@ class TestAdb(TestBase):
 
     def test_grant_permissions(self):
         permissions = []
-        target_device.grant_permissions(self.package, permissions)
+        target_device.grant_permissions(package, permissions)
 
     def test_revoke_permissions(self):
         permissions = []
-        target_device.revoke_permissions(self.package, permissions)
+        target_device.revoke_permissions(package, permissions)
 
     def test_google_debloat(self):
         output = target_device.google_debloat()
@@ -173,13 +178,13 @@ class TestAdb(TestBase):
         output = target_device.restore(backup_file)
 
     def test_set_home_app(self):
-        output = target_device.set_home_app(self.package)
+        output = target_device.set_home_app(package)
 
     def test_push_file(self):
-        output = target_device.push_file(self.pc_path, self.device_path)
+        output = target_device.push_file(pc_path, device_path)
 
     def test_pull_file(self):
-        target_device.pull_file(self.device_path, self.pc_path)
+        target_device.pull_file(device_path, pc_path)
 
     def test_get_shell_property(self):
         prop = target_device.get_shell_property("ro.product.model")
@@ -216,28 +221,36 @@ class TestAdb(TestBase):
         target_device.fastboot_reboot()
 
     def test_fastboot_flash_boot(self):
-        target_device.fastboot_flash_boot(self.image_path)
+        target_device.fastboot_flash_boot(image_path)
+
+    # utility methods
+    def test_download_link(self):
+        pass
+
+    def test_download_sdk_platform_tools(self):
+        pass
 
 
 if __name__ == "__main__":
     adb_methods = [
-        # TestAdb.test_check_adb_path,
+        TestAdb.test_check_sdk_path,
         # TestAdb.test_get_devices,
-        TestAdb.test_connect,
+        # TestAdb.test_connect,
+        # TestAdb.test_get_ip,
+        # TestAdb.test_execute_command,
         # TestAdb.test_disconnect,
         # TestAdb.test_enable_tcpip_mode,
         # TestAdb.test_enable_usb_mode
     ]
     root_methods = [
-        TestAdb.test_factory_reset,
-        TestAdb.test_root,
+        # TestAdb.test_factory_reset,
+        # TestAdb.test_root,
         TestAdb.test_get_bootloader_status,
-        TestAdb.test_unlock_bootloader,
-        TestAdb.test_fastboot_reboot,
-        TestAdb.test_fastboot_flash_boot,
+        # TestAdb.test_unlock_bootloader,
+        # TestAdb.test_fastboot_reboot,
+        # TestAdb.test_fastboot_flash_boot,
     ]
     device_methods = [
-        # TestAdb.test_execute_command,
         # TestAdb.test_get_system_packages,
         # TestAdb.test_get_google_packages,
         # TestAdb.test_get_third_party_packages,
@@ -265,4 +278,11 @@ if __name__ == "__main__":
         # TestAdb.test_execute_touch_event,
         # TestAdb.test_expand_notifications,
     ]
-    run_test_methods(device_methods)
+
+    util_methods = [
+        # TestAdb.test_download_link,
+        # TestAdb.test_download_sdk_platform_tools,
+    ]
+
+    methods = adb_methods
+    run_test_methods(adb_methods)

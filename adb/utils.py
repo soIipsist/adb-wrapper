@@ -1,28 +1,10 @@
 import json
+import mimetypes
 import os
 from pathlib import Path
 import shutil
 import platform
 import urllib.request
-
-
-def create_json_file(json_file, data=None):
-    try:
-        with open(json_file, "w") as file:
-            if data is None:
-                data = []
-            json.dump(data, file)
-    except Exception as e:
-        print(e)
-
-
-def read_json_file(json_file, errors=None):
-    try:
-        with open(json_file, "r", errors=errors) as file:
-            json_object = json.load(file)
-            return json_object
-    except Exception as e:
-        print(e)
 
 
 def download_sdk_platform_tools(output_directory=None):
@@ -37,31 +19,7 @@ def download_sdk_platform_tools(output_directory=None):
 
     platform_str = platform.system().lower()
     download_link = f"https://dl.google.com/android/repository/platform-tools-latest-{platform_str}.zip"
-
-    try:
-        # Ensure the output directory exists
-        os.makedirs(output_directory, exist_ok=True)
-
-        file_name = os.path.basename(download_link)
-        sdk_path = os.path.join(output_directory, file_name)
-
-        print("Downloading SDK platform tools...")
-        with urllib.request.urlopen(download_link) as response:
-            with open(sdk_path, "wb") as out_file:
-                shutil.copyfileobj(response, out_file)
-
-        print("Extracting SDK platform tools...")
-        shutil.unpack_archive(sdk_path, output_directory)
-
-        os.remove(sdk_path)
-
-        print(
-            f"SDK platform-tools was successfully downloaded and extracted at '{output_directory}'."
-        )
-        return os.path.join(output_directory, "platform-tools")
-    except Exception as e:
-        print(f"An error occurred: {e}")
-
+    sdk_path = download_file_from_link(download_link)
     return sdk_path
 
 
@@ -122,9 +80,12 @@ def check_sdk_path():
 def load_env(file_path=".env"):
     """
     Load environment variables from a .env file into the process environment.
+    Also supports arrays if values are comma-separated.
     """
     if not os.path.exists(file_path):
         raise FileNotFoundError(f"The .env file at {file_path} was not found.")
+
+    env_vars = {}
 
     with open(file_path, "r") as file:
         for line in file:
@@ -134,4 +95,56 @@ def load_env(file_path=".env"):
 
             key, sep, value = line.partition("=")
             if sep:
-                os.environ[key.strip()] = value.strip()
+                key = key.strip()
+                value = value.strip()
+
+                if "," in value:
+                    env_vars[key] = [item.strip() for item in value.split(",")]
+                else:
+                    env_vars[key] = value
+
+                os.environ[key] = value
+
+    return env_vars
+
+
+def download_file_from_link(download_link, output_path=None):
+    """
+    Download a file from a given link and save it to the specified output path.
+    If the file is an archive, it is automatically extracted, and the extracted path is returned.
+    """
+
+    try:
+        if output_path is None:
+            output_directory = os.path.expanduser("~")
+            file_name = os.path.basename(download_link)
+            output_path = os.path.join(output_directory, file_name)
+        else:
+            output_directory = os.path.dirname(output_path)
+            file_name = os.path.basename(output_path)
+
+        os.makedirs(output_directory, exist_ok=True)
+
+        print(f"Downloading file from {download_link} to {output_path}...")
+        with urllib.request.urlopen(download_link) as response:
+            with open(output_path, "wb") as out_file:
+                shutil.copyfileobj(response, out_file)
+
+        print(f"File downloaded at: {output_path}")
+
+        # Check if the file is an archive and extract it
+        mime_type, _ = mimetypes.guess_type(output_path)
+        if mime_type in ["application/zip", "application/x-tar", "application/gzip"]:
+            print("Extracting the archive...")
+            extracted_dir = os.path.join(
+                output_directory, os.path.splitext(file_name)[0]
+            )
+            shutil.unpack_archive(output_path, extracted_dir)
+            os.remove(output_path)
+            print(f"File extracted to: {extracted_dir}")
+            return extracted_dir
+
+        return output_path
+    except Exception as e:
+        print(f"An error occurred while downloading or extracting the file: {e}")
+        return None
