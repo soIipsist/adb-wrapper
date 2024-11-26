@@ -1,7 +1,19 @@
 from pprint import PrettyPrinter
-from adb.utils import check_sdk_path, load_env
+from adb.utils import (
+    load_env,
+    download_file_from_link,
+    download_sdk_platform_tools,
+)
 from test_base import TestBase, run_test_methods
-from adb.adb import ADB, Device, Package, RootMethod
+from adb.adb import (
+    ADB,
+    Device,
+    Package,
+    RootMethod,
+    magisk_url,
+    apatch_url,
+    kernelsu_url,
+)
 import os
 
 adb = ADB()
@@ -35,11 +47,11 @@ class TestAdb(TestBase):
             print(device.id)
 
     def test_check_sdk_path(self):
-        platform_tools_path = check_sdk_path()
+        sdk_path = adb.check_sdk_path()
 
-        print(platform_tools_path)
-        self.assertTrue(platform_tools_path is not None)
-        self.assertTrue(os.path.exists(platform_tools_path))
+        print(sdk_path)
+        self.assertTrue(sdk_path is not None)
+        self.assertTrue(os.path.exists(sdk_path))
         # print(os.environ.get("PATH"))
 
     def test_connect(self):
@@ -224,11 +236,32 @@ class TestAdb(TestBase):
         target_device.fastboot_flash_boot(image_path)
 
     # utility methods
+    def test_load_env(self):
+        env_vars = load_env()
+        print("ENV", env_vars)
+        self.assertTrue(isinstance(env_vars, dict))
+
     def test_download_link(self):
-        pass
+        # test without output_path
+        output_path = download_file_from_link(magisk_url)
+        print(output_path)
+        self.assertTrue(os.path.exists(output_path))
+
+        # test with output_path (directory given)
+        output_path = download_file_from_link(magisk_url, "/Users/p/Desktop/magisk.apk")
+        self.assertTrue(os.path.exists(output_path))
+        print(output_path)
+
+        # test with output_path (directory not given)
+        output_path = download_file_from_link(magisk_url, "magisk.apk")
+        self.assertTrue(os.path.exists(output_path))
+        print(output_path)
 
     def test_download_sdk_platform_tools(self):
-        pass
+        output_directory = os.getcwd()
+        output_path = download_sdk_platform_tools(output_directory)
+
+        self.assertTrue(os.path.exists(output_path))
 
 
 if __name__ == "__main__":
@@ -280,9 +313,12 @@ if __name__ == "__main__":
     ]
 
     util_methods = [
+        # TestAdb.test_load_env,
         # TestAdb.test_download_link,
-        # TestAdb.test_download_sdk_platform_tools,
+        TestAdb.test_download_sdk_platform_tools,
     ]
 
-    methods = adb_methods
-    run_test_methods(adb_methods)
+    # methods = adb_methods
+    # methods = device_methods
+    methods = util_methods
+    run_test_methods(methods)

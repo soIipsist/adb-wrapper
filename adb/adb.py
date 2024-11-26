@@ -6,6 +6,7 @@ from typing import List
 from .utils import *
 from functools import wraps
 from importlib import resources
+import json
 
 
 def command(command: str, logging: bool = True, base_cmd="adb"):
@@ -127,7 +128,54 @@ class ADB:
     google_packages: list = []
 
     def __init__(self) -> None:
-        self.sdk_path = check_sdk_path()
+        self.sdk_path = self.check_sdk_path()
+
+    def check_sdk_path(self):
+        """
+        Checks if 'platform-tools' exists in the PATH environment variable.
+        Prompts the user to download it if not found and returns the platform-tools directory.
+        """
+        path_variable = os.environ.get("PATH", "")
+
+        sdk_path = None
+
+        for path in path_variable.split(os.pathsep):
+            if "platform-tools" in path and Path(path).is_dir():
+                sdk_path = path
+                break
+
+        if not sdk_path:
+            user_input = (
+                input(
+                    "ADB was not found in your PATH environment variable. "
+                    "Would you like to download the latest version of SDK platform-tools? (y/n): "
+                )
+                .strip()
+                .lower()
+            )
+
+            if user_input == "y":
+
+                default_dir = Path.home()
+                download_dir = input(
+                    f"Enter the directory where platform-tools should be downloaded (default: {default_dir}): "
+                ).strip()
+                download_dir = (
+                    Path(download_dir).resolve() if download_dir else default_dir
+                )
+
+                sdk_path = download_sdk_platform_tools(download_dir)
+                if not sdk_path:
+                    raise RuntimeError("Failed to download SDK platform-tools.")
+
+                set_environment_variable(sdk_path)
+                return str(sdk_path)
+            else:
+                raise FileNotFoundError(
+                    "ADB commands cannot be executed because platform-tools is not in your PATH."
+                )
+
+        return sdk_path
 
     def get_google_packages(self):
         packages = []

@@ -1,9 +1,9 @@
-import json
 import mimetypes
 import os
 from pathlib import Path
 import shutil
 import platform
+import subprocess
 import urllib.request
 
 
@@ -19,62 +19,61 @@ def download_sdk_platform_tools(output_directory=None):
 
     platform_str = platform.system().lower()
     download_link = f"https://dl.google.com/android/repository/platform-tools-latest-{platform_str}.zip"
-    sdk_path = download_file_from_link(download_link)
+    output_path = os.path.join(output_directory, os.path.basename(download_link))
+
+    print("SDK path set to: ", output_path)
+    sdk_path = download_file_from_link(download_link, output_path)
     return sdk_path
 
 
-def set_environment_variable(sdk_path: str):
-    if os.name == "nt":  # Windows
-        os.environ["PATH"] += f";{sdk_path}"
-    else:  # macOS/Linux
-        os.environ["PATH"] += f":{sdk_path}"
+def set_environment_variable(sdk_path: str, set_globally: bool = False):
+    if set_globally:
+        set_path_env_variable_globally()
+    else:
+        if os.name == "nt":  # Windows
+            os.environ["PATH"] += f";{sdk_path}"
+        else:  # macOS/Linux
+            os.environ["PATH"] += f":{sdk_path}"
 
     print(f"Added '{sdk_path}' to the PATH environment variable.")
 
 
-def check_sdk_path():
+def set_path_env_variable_globally(value, shell_restart_required=True):
     """
-    Checks if 'platform-tools' exists in the PATH environment variable.
-    Prompts the user to download it if not found and returns the platform-tools directory.
+    Sets an environment variable globally, not just for the current process.
+
     """
-    path_variable = os.environ.get("PATH", "")
 
-    platform_tools_path = None
-    for path in path_variable.split(os.pathsep):
-        if "platform-tools" in path and Path(path).is_dir():
-            platform_tools_path = path
-            break
-
-    if not platform_tools_path:
-        user_input = (
-            input(
-                "ADB was not found in your PATH environment variable. "
-                "Would you like to download the latest version of SDK platform-tools? (y/n): "
-            )
-            .strip()
-            .lower()
-        )
-
-        if user_input == "y":
-
-            default_dir = Path.home()
-            download_dir = input(
-                f"Enter the directory where platform-tools should be downloaded (default: {default_dir}): "
-            ).strip()
-            download_dir = Path(download_dir).resolve() if download_dir else default_dir
-
-            sdk_path = download_sdk_platform_tools(download_dir)
-            if not sdk_path:
-                raise RuntimeError("Failed to download SDK platform-tools.")
-
-            set_environment_variable(sdk_path)
-            return str(sdk_path)
+    try:
+        if os.name == "nt":
+            subprocess.run(["setx", key, value], check=True)
         else:
-            raise FileNotFoundError(
-                "ADB commands cannot be executed because platform-tools is not in your PATH."
+            # Modify shell configuration files for macOS or Linux
+            home_dir = os.path.expanduser("~")
+            shell = os.getenv("SHELL", "/bin/bash")
+            config_file = None
+
+            # Determine the shell configuration file
+            if shell.endswith("bash"):
+                config_file = os.path.join(home_dir, ".bashrc")
+            elif shell.endswith("zsh"):
+                config_file = os.path.join(home_dir, ".zshrc")
+            elif shell.endswith("fish"):
+                config_file = os.path.join(home_dir, ".config/fish/config.fish")
+            else:
+                raise EnvironmentError(f"Unsupported shell: {shell}")
+
+        # Notify about shell restart if needed
+        if shell_restart_required:
+            print(
+                f"To apply the changes globally, restart your terminal or run `source ~/.bashrc` "
+                f"(or equivalent for your shell)."
             )
 
-    return platform_tools_path
+        return True
+    except Exception as e:
+        print(f"An error occurred while setting the environment variable: {e}")
+        return False
 
 
 def load_env(file_path=".env"):
@@ -112,32 +111,35 @@ def download_file_from_link(download_link, output_path=None):
     """
     Download a file from a given link and save it to the specified output path.
     If the file is an archive, it is automatically extracted, and the extracted path is returned.
-    """
 
+    """
     try:
+        # Determine the output path and directory
         if output_path is None:
-            output_directory = os.path.expanduser("~")
+            output_directory = os.getcwd()
             file_name = os.path.basename(download_link)
             output_path = os.path.join(output_directory, file_name)
         else:
             output_directory = os.path.dirname(output_path)
-            file_name = os.path.basename(output_path)
+            if not output_directory:  # Handle cases like "sample.zip"
+                output_directory = os.getcwd()
+                output_path = os.path.join(output_directory, output_path)
 
         os.makedirs(output_directory, exist_ok=True)
 
         print(f"Downloading file from {download_link} to {output_path}...")
+
         with urllib.request.urlopen(download_link) as response:
             with open(output_path, "wb") as out_file:
                 shutil.copyfileobj(response, out_file)
 
         print(f"File downloaded at: {output_path}")
 
-        # Check if the file is an archive and extract it
         mime_type, _ = mimetypes.guess_type(output_path)
         if mime_type in ["application/zip", "application/x-tar", "application/gzip"]:
             print("Extracting the archive...")
             extracted_dir = os.path.join(
-                output_directory, os.path.splitext(file_name)[0]
+                output_directory, os.path.splitext(os.path.basename(output_path))[0]
             )
             shutil.unpack_archive(output_path, extracted_dir)
             os.remove(output_path)
