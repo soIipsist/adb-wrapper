@@ -1,6 +1,7 @@
 from enum import Enum
 from itertools import zip_longest
 from pathlib import Path
+import re
 import subprocess
 import shlex
 import os
@@ -13,7 +14,7 @@ import json
 sdk_checked: bool = False
 
 
-def command(command: str, logging: bool = True, base_cmd="adb"):
+def command(command: str, logging: bool = True, base_cmd="adb", log_cmd: bool = False):
     def decorator(func):
         @wraps(func)
         def wrapper(cls, *args, **kwargs):
@@ -55,6 +56,9 @@ def command(command: str, logging: bool = True, base_cmd="adb"):
 
             if logging:
                 print(output)
+
+            if log_cmd:
+                print(command_args)
 
             return func(cls, *args, **kwargs)
 
@@ -233,10 +237,6 @@ class ADB:
     def disconnect(self, device_ip: str):
         return self.output
 
-    @command("shell ip route")
-    def get_device_ip(self):
-        return self.output
-
     @command("devices")
     def get_devices(self) -> List["Device"]:
         """
@@ -285,6 +285,17 @@ class Device(ADB):
 
     def __init__(self, id) -> None:
         self.id = id
+
+    @command("shell ip route")
+    def get_device_ip(self):
+
+        ip_pattern = r"\b(\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3})(?!\/)\b"
+
+        match = re.search(ip_pattern, self.output)
+
+        if match:
+            return match.group(1)  # Return the matched IP address
+        return None
 
     def root(self, root_method: RootMethod = RootMethod.MAGISK, image_path: str = None):
         if image_path is None:

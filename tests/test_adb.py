@@ -46,6 +46,7 @@ class TestAdb(TestBase):
     def setUp(self) -> None:
         super().setUp()
 
+    # adb methods
     def test_get_devices(self):
         devices = adb.get_devices()
 
@@ -76,13 +77,12 @@ class TestAdb(TestBase):
         adb.get_device()
 
     def test_connect(self):
+        print(device_ip)
         output = adb.connect(device_ip)
 
     def test_disconnect(self):
+        print(device_ip)
         adb.disconnect(device_ip)
-
-    def test_get_ip(self):
-        adb.get_device_ip()
 
     def test_enable_usb_mode(self):
         output = adb.enable_usb_mode()
@@ -94,8 +94,14 @@ class TestAdb(TestBase):
     def test_execute_command(self):
         output = adb.execute("version")
 
+    # device methods
     def test_get_packages(self):
         packages = target_device.get_packages()
+
+    def test_get_ip(self):
+        new_device_ip = target_device.get_device_ip()
+        new_device_ip = new_device_ip + ":5555"
+        self.assertTrue(new_device_ip == device_ip)
 
     def test_get_third_party_packages(self):
         packages = target_device.get_third_party_packages()
@@ -325,13 +331,12 @@ class TestAdb(TestBase):
 
 if __name__ == "__main__":
     adb_methods = [
-        TestAdb.test_check_sdk_path,
+        # TestAdb.test_check_sdk_path,
         # TestAdb.test_get_devices,
         # TestAdb.test_get_device,
         # TestAdb.test_connect,
-        # TestAdb.test_get_ip,
-        # TestAdb.test_execute_command,
         # TestAdb.test_disconnect,
+        # TestAdb.test_execute_command,
         # TestAdb.test_enable_tcpip_mode,
         # TestAdb.test_enable_usb_mode
     ]
@@ -357,7 +362,8 @@ if __name__ == "__main__":
         # TestAdb.test_google_debloat,
     ]
     device_settings_methods = [
-        TestAdb.test_get_system_settings,
+        TestAdb.test_get_ip,
+        # TestAdb.test_get_system_settings,
         # TestAdb.test_get_global_settings,
         # TestAdb.test_get_secure_settings,
         # TestAdb.test_get_settings,
@@ -394,7 +400,8 @@ if __name__ == "__main__":
         # TestAdb.test_make_executable,
     ]
 
-    methods = adb_methods
-    # methods = device_package_methods
+    device_methods = device_settings_methods
+    # methods = adb_methods
+    methods = device_methods
     # methods = util_methods
     run_test_methods(methods)
