@@ -98,18 +98,18 @@ class TestAdb(TestBase):
     # device package methods
     def test_get_packages(self):
         packages = target_device.get_packages()
+        print(packages, len(packages))
 
     def test_get_third_party_packages(self):
         packages = target_device.get_third_party_packages()
-        print(packages)
-
-        self.assertTrue(
-            all(isinstance(package, Package) for package in packages),
-        )
+        for package in packages:
+            print(package.package_name, package.package_path)
+            self.assertTrue(isinstance(package, Package))
 
     def test_get_system_packages(self):
         packages = target_device.get_system_packages()
-        print(packages)
+        for package in packages:
+            print(package.package_name, package.package_path, package.name)
 
         self.assertTrue(
             all(isinstance(package, Package) for package in packages),
@@ -131,8 +131,17 @@ class TestAdb(TestBase):
 
         print(len(filtered), len(packages))
 
+    def test_install_package(self):
+        pass
+
+    def test_reinstall_package(self):
+        pass
+
     def test_install_packages(self):
         output = target_device.install_package("com.google.android.apps.youtube.music")
+
+    def test_uninstall_package(self):
+        target_device.uninstall_package()
 
     def test_uninstall_packages(self):
         output = target_device.uninstall_package(
@@ -327,6 +336,10 @@ class TestAdb(TestBase):
     def test_unlock_bootloader(self):
         target_device.unlock_bootloader()
 
+    def test_is_oem_unlock_supported(self):
+        is_supported = target_device.is_oem_unlock_supported()
+        print(is_supported)
+
     def test_fastboot_reboot(self):
         target_device.fastboot_reboot()
 
@@ -408,22 +421,25 @@ if __name__ == "__main__":
     root_methods = [
         # TestAdb.test_factory_reset,
         # TestAdb.test_root,
-        TestAdb.test_unlock_bootloader,
+        # TestAdb.test_unlock_bootloader,
+        TestAdb.test_is_oem_unlock_supported,
         # TestAdb.test_fastboot_reboot,
         # TestAdb.test_fastboot_flash_boot,
     ]
 
     device_package_methods = [
         TestAdb.test_get_system_packages,
-        TestAdb.test_get_google_packages,
-        TestAdb.test_get_third_party_packages,
-        TestAdb.test_get_packages,
-        TestAdb.test_filter_packages,
-        TestAdb.test_grant_permissions,
-        TestAdb.test_revoke_permissions,
-        TestAdb.test_install_packages,
-        TestAdb.test_uninstall_packages,
-        TestAdb.test_google_debloat,
+        # TestAdb.test_get_google_packages,
+        # TestAdb.test_get_third_party_packages,
+        # TestAdb.test_get_packages,
+        # TestAdb.test_filter_packages,
+        # TestAdb.test_grant_permissions,
+        # TestAdb.test_revoke_permissions,
+        # TestAdb.test_install_packages,
+        # TestAdb.test_install_package,
+        # TestAdb.test_uninstall_package,
+        # TestAdb.test_uninstall_packages,
+        # TestAdb.test_google_debloat,
     ]
     device_settings_methods = [
         TestAdb.test_get_ip,
@@ -473,9 +489,9 @@ if __name__ == "__main__":
         TestAdb.test_make_executable,
     ]
 
-    device_methods = device_event_methods
-    methods = root_methods
+    device_methods = device_package_methods
+    # methods = root_methods
     # methods = adb_methods
-    # methods = device_methods
+    methods = device_methods
     # methods = util_methods
     run_test_methods(methods)

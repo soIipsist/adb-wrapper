@@ -108,20 +108,23 @@ kernelsu_url = "https://github.com/tiann/KernelSU/releases/download/v1.0.2/Kerne
 class Package:
     img_src = None
     package_name = None
+    package_path = None
     name = None
     genre = None
     package_type = PackageType.GOOGLE
 
     def __init__(
         self,
-        img_src: str = None,
         package_name: str = None,
+        package_path: str = None,
+        package_type: PackageType = None,
+        img_src: str = None,
         name: str = None,
         genre: str = None,
-        package_type: PackageType = None,
     ):
-        self.img_src = img_src
         self.package_name = package_name
+        self.package_path = package_path
+        self.img_src = img_src
         self.name = name
         self.genre = genre
         self.package_type = package_type
@@ -407,6 +410,10 @@ class Device(ADB):
     def is_bootloader_locked(self):
         return bool(self.get_shell_property("ro.boot.flash.locked"))
 
+    @command("shell getprop ro.oem_unlock_supported", logging=False)
+    def is_oem_unlock_supported(self):
+        return bool(self.output)
+
     def get_model(self):
         return self.get_shell_property("ro.product.model")
 
@@ -473,8 +480,19 @@ class Device(ADB):
         packages = packages.strip().splitlines()
 
         for idx, package in enumerate(packages):
-            package_name = package.split(":", 1)[1] if ":" in package else package
-            packages[idx] = Package(package_name=package_name)
+            package_path = None
+            package_name = None
+
+            if package.startswith("package:"):
+                package_path = package.split("package:", 1)[1].split("=", 1)[0].strip()
+
+            if "=" in package:
+                package_name = package.split("=", 1)[1].strip()
+
+            name = os.path.basename(package_path)
+            packages[idx] = Package(
+                package_name=package_name, package_path=package_path, name=name
+            )
 
         return packages
 
@@ -529,23 +547,30 @@ class Device(ADB):
     def clear_password(self, password):
         return self.output
 
-    @command(f"shell pm list packages {PackageType.SYSTEM.value}", logging=False)
+    @command(f"shell pm list packages -f {PackageType.SYSTEM.value}", logging=False)
     def get_system_packages(self):
         return self.parse_packages(self.output)
 
-    @command(f"shell pm list packages {PackageType.THIRD_PARTY.value}", logging=False)
+    @command(
+        f"shell pm list packages -f {PackageType.THIRD_PARTY.value}", logging=False
+    )
     def get_third_party_packages(self):
         return self.parse_packages(self.output)
 
     def install_package(self, package):
         if isinstance(package, Package):
-            package = Package.package_name
+            package = package.package_name
 
         return self.execute(f"install {package}")
 
+    def reinstall_package(self, package):
+        if isinstance(package, Package):
+            package = package.package_name
+        return self.execute(f"reinstall {package}")
+
     def uninstall_package(self, package):
         if isinstance(package, Package):
-            package = Package.package_name
+            package = package.package_name
 
         return self.execute(f"uninstall --user 0 {package}")
 
