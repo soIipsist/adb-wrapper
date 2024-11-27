@@ -3,6 +3,7 @@ from adb.utils import (
     load_env,
     download_file_from_link,
     download_sdk_platform_tools,
+    make_executable,
     set_path_environment_variable,
     find_variable_in_path,
 )
@@ -298,6 +299,18 @@ class TestAdb(TestBase):
         print(sdk_path)
         self.assertTrue(os.path.exists(sdk_path))
 
+    def test_make_executable(self):
+        file_path = "file.txt"
+        if not os.path.exists(file_path):
+            # create file.txt
+            with open(file_path, "w") as file:
+                file.write("some file")
+
+        self.assertTrue(os.path.exists(file_path))
+        make_executable(file_path)
+        is_executable = os.access(file_path, os.X_OK)
+        self.assertTrue(is_executable)
+
 
 if __name__ == "__main__":
     adb_methods = [
@@ -354,10 +367,11 @@ if __name__ == "__main__":
         # TestAdb.test_download_link,
         # TestAdb.test_download_sdk_platform_tools,
         # TestAdb.test_set_path_environment_variable,
-        TestAdb.test_find_variable_in_path,
+        # TestAdb.test_find_variable_in_path,
+        # TestAdb.test_make_executable,
     ]
 
-    methods = adb_methods
+    # methods = adb_methods
     # methods = device_methods
-    # methods = util_methods
+    methods = util_methods
     run_test_methods(methods)

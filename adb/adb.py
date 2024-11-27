@@ -181,11 +181,14 @@ class ADB:
                 set_path_environment_variable(sdk_path, set_globally)
 
                 # grant permissions to adb and fastboot
-
+                adb_path = os.path.join(sdk_path, "adb")
+                fastboot_path = os.path.join(sdk_path, "fastboot")
+                make_executable(adb_path)
+                make_executable(fastboot_path)
                 return str(sdk_path)
             else:
                 raise FileNotFoundError(
-                    "ADB commands cannot be executed because platform-tools is not in your PATH."
+                    "ADB commands cannot be executed because platform-tools was not found."
                 )
 
         return sdk_path

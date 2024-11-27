@@ -126,6 +126,14 @@ def load_env(file_path=".env"):
     return env_vars
 
 
+def make_executable(file_path):
+    try:
+        os.chmod(file_path, 0o755)
+        print(f"{file_path} is now executable.")
+    except Exception as e:
+        print(f"Error making {file_path} executable: {e}")
+
+
 def download_file_from_link(download_link, output_path=None):
     """
     Download a file from a given link and save it to the specified output path.
