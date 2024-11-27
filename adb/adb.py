@@ -88,6 +88,15 @@ class RootMethod(Enum):
     KERNELSU = "KernelSU"
 
 
+class VolumeType(Enum):
+    CALL = "1"
+    RINGTONE = "2"
+    MEDIA = "3"
+    ALARM = "4"
+    NOTIFICATION = "5"
+    SYSTEM = "6"
+
+
 magisk_url = (
     "https://github.com/topjohnwu/Magisk/releases/download/v28.0/Magisk-v28.0.apk"
 )
@@ -541,6 +550,20 @@ class Device(ADB):
     @command("shell locksettings set-disabled true")
     def disable_lock_screen(self):
         return self.output
+
+    @command("shell locksettings set-disabled false")
+    def enable_lock_screen(self):
+        return self.output
+
+    def set_brightness(self, brightness: int):
+        return self.set_settings([f"system.screen_brightness={brightness}"])
+
+    def set_volume(
+        self, volume_level: int, volume_type: VolumeType = VolumeType.SYSTEM
+    ):
+        return self.execute(
+            f"shell media volume --stream {volume_type.value} --set {volume_level}"
+        )
 
     @command("shell input tap")
     def execute_touch_event(self, x, y):

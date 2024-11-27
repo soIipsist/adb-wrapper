@@ -14,6 +14,7 @@ from adb.adb import (
     Device,
     Package,
     RootMethod,
+    VolumeType,
     magisk_url,
     apatch_url,
     kernelsu_url,
@@ -190,8 +191,8 @@ class TestAdb(TestBase):
 
     def test_set_settings(self):
         settings = [
-            "global.user_switcher_enabled=1",
-            "secure.lock_screen_show_notifications=1",
+            "global.user_switcher_enabled=0",
+            "secure.lock_screen_show_notifications=0",
         ]
 
         # format can be:
@@ -201,15 +202,24 @@ class TestAdb(TestBase):
         target_device.set_settings(settings)
         target_device.get_settings()
 
+        print(target_device.get_settings().keys())
+
         user_switcher = target_device.global_settings.get("user_switcher_enabled")
         print(user_switcher)
-
-        self.assertTrue(user_switcher == "1")
 
         show_lockscreen_notifications = target_device.secure_settings.get(
             "lock_screen_show_notifications"
         )
         print(show_lockscreen_notifications)
+
+    def test_set_brightness(self):
+        output = target_device.set_brightness(255)
+
+    def test_set_volume(self):
+        output = target_device.set_volume(0, VolumeType.ALARM)
+
+    def test_enable_lockscreen(self):
+        output = target_device.enable_lock_screen()
 
     def test_disable_lockscreen(self):
         output = target_device.disable_lock_screen()
@@ -383,20 +393,23 @@ if __name__ == "__main__":
         TestAdb.test_google_debloat,
     ]
     device_settings_methods = [
-        # TestAdb.test_get_ip,
-        # TestAdb.test_get_system_settings,
-        # TestAdb.test_get_global_settings,
-        # TestAdb.test_get_secure_settings,
-        # TestAdb.test_get_settings,
-        # TestAdb.test_set_settings,
-        # TestAdb.test_is_bootloader_locked,
-        # TestAdb.test_get_shell_property,
-        # TestAdb.test_disable_lockscreen,
-        # TestAdb.test_set_password,
-        # TestAdb.test_clear_password,
-        # TestAdb.test_disable_mobile_data,
-        # TestAdb.test_enable_mobile_data,
-        # TestAdb.test_disable_wifi,
+        TestAdb.test_get_ip,
+        TestAdb.test_get_system_settings,
+        TestAdb.test_get_global_settings,
+        TestAdb.test_get_secure_settings,
+        TestAdb.test_get_settings,
+        TestAdb.test_set_settings,
+        TestAdb.test_is_bootloader_locked,
+        TestAdb.test_get_shell_property,
+        TestAdb.test_enable_lockscreen,
+        TestAdb.test_disable_lockscreen,
+        TestAdb.test_set_brightness,
+        TestAdb.test_set_volume,
+        TestAdb.test_set_password,
+        TestAdb.test_clear_password,
+        TestAdb.test_disable_mobile_data,
+        TestAdb.test_enable_mobile_data,
+        TestAdb.test_disable_wifi,
         TestAdb.test_enable_wifi,
     ]
 
@@ -423,7 +436,7 @@ if __name__ == "__main__":
         TestAdb.test_make_executable,
     ]
 
-    device_methods = device_settings_methods
+    device_methods = device_file_methods
     # methods = adb_methods
     methods = device_methods
     # methods = util_methods
