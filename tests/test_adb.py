@@ -263,14 +263,32 @@ class TestAdb(TestBase):
         target_device.push_file(pc_path)
 
     def test_pull_files(self):
-        target_device.pull_file(device_path, None)
+        target_device.pull_file(device_path)
 
     def test_file_exists(self):
-        target_device.file_exists(device_path)
+        # file that doesn't exist
+        file_path = "yooo.txt"
+        file_exists = target_device.file_exists(file_path)
+        print(file_exists)
+        self.assertFalse(file_exists)
+
+        file_exists = target_device.file_exists(apk_device_path)
+        self.assertTrue(file_exists)
+        print(file_exists)
 
     def test_get_current_working_directory(self):
         pwd = target_device.get_current_working_directory()
-        print(pwd)
+
+    def test_is_valid_path(self):
+        path = "/storage/emulated/0/Download"
+        output = target_device.is_valid_path(path)
+        print(output)
+        self.assertTrue(output)
+
+        path = "yo"
+        output = target_device.is_valid_path(path)
+        print(output)
+        self.assertFalse(output)
 
     # device event methods
     def test_execute_touch_event(self):
@@ -418,9 +436,11 @@ if __name__ == "__main__":
         TestAdb.test_restore,
     ]
     device_file_methods = [
-        TestAdb.test_get_current_working_directory,
-        TestAdb.test_push_files,
-        TestAdb.test_pull_files,
+        # TestAdb.test_file_exists,
+        # TestAdb.test_get_current_working_directory,
+        TestAdb.test_is_valid_path,
+        # TestAdb.test_push_files,
+        # TestAdb.test_pull_files,
     ]
     device_event_methods = [
         TestAdb.test_execute_touch_event,

@@ -6,12 +6,14 @@ import os
 
 parser = argparse.ArgumentParser()
 
-parser.add_argument("files", nargs="+", type=str)
-parser.add_argument("-d", "--destination_paths", nargs="+", type=str)
+parser.add_argument("device_files", nargs="+", type=str)
+parser.add_argument("-p", "--pc_files", nargs="+", type=str)
 
 args = vars(parser.parse_args())
-files = args.get("files")
-destination_paths = args.get("destination_paths")
+device_files = args.get("device_files")
+pc_files = args.get("pc_files")
 
 adb = ADB()
 device = adb.get_device()
+
+output = device.pull_files(device_files, pc_files)

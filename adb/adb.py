@@ -273,12 +273,18 @@ class ADB:
             None,
         )
 
-    def execute(self, command_args: str, logging: bool = True, base_cmd: str = "adb"):
+    def execute(
+        self,
+        command_args: str,
+        logging: bool = True,
+        base_cmd: str = "adb",
+        log_cmd: bool = False,
+    ):
         """
         Executes an adb command and returns its output.
         """
 
-        @command(command_args, logging, base_cmd)
+        @command(command_args, logging, base_cmd, log_cmd)
         def run_command(cls):
             return cls.output
 
@@ -597,26 +603,50 @@ class Device(ADB):
     def get_current_working_directory(self):
         return self.output
 
-    def push_files(self, pc_files: List[str], device_files: List[str] = None):
+    @command("shell ls", logging=False)
+    def is_valid_path(self, path):
+        return not bool(self.return_code)
+
+    def push_files(
+        self,
+        pc_files: List[str],
+        device_files: List[str] = None,
+        target_directory: str = None,
+    ):
+        """Transfer files from pc to device."""
+        outputs = []
+        if not target_directory:
+            target_directory = self.get_current_working_directory()
+
         for pc_file, device_file in zip_longest(pc_files, device_files):
             if device_file is None:
-                cwd = self.get_current_working_directory()
-                device_file = (
-                    os.path.join(cwd, os.path.basename(pc_file)) if cwd else None
-                )
+                device_file = os.path.join(target_directory, os.path.basename(pc_file))
 
-            self.push_file(pc_file, device_file)
+            output = self.push_file(pc_file, device_file)
+            outputs.append(output)
+        return outputs
 
-    def pull_files(self, device_files: List[str], pc_files: List[str] = None):
+    def pull_files(
+        self,
+        device_files: List[str],
+        pc_files: List[str] = None,
+        target_directory: str = None,
+    ):
+        """Transfer files from device to pc."""
+
+        if not target_directory:
+            target_directory = os.getcwd()
+        outputs = []
         for device_file, pc_file in zip_longest(device_files, pc_files):
             if pc_file is None:
-                cwd = os.getcwd()
-                pc_file = os.path.join(cwd, os.path.basename(device_file))
-            self.pull_file(device_file, pc_file)
+                pc_file = os.path.join(target_directory, os.path.basename(device_file))
+            output = self.pull_file(device_file, pc_file)
+            outputs.append(output)
+        return outputs
 
-    @command("adb shell test -f")
+    @command("shell test -f")
     def file_exists(self, file_path: str):
-        return self.return_code
+        return not bool(self.return_code)
 
     # works if rooted
     @command("shell am broadcast -a android.intent.action.MASTER_CLEAR")
