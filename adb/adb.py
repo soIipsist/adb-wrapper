@@ -52,7 +52,7 @@ def command(command: str, logging: bool = True, base_cmd="adb", log_cmd: bool = 
                 elif "unknown" in output.lower():
                     raise FileNotFoundError(f"Command not found: {command_args}")
                 elif "error" in output.lower():
-                    raise RuntimeError(f"Critical error: {process.stderr.strip()}")
+                    raise RuntimeError(f"Critical error: {output}")
 
             setattr(cls, "return_code", process.returncode)
             setattr(cls, "output", output)
@@ -592,11 +592,13 @@ class Device(ADB):
         return self.output
 
     @command("push")
-    def push_file(self, pc_file, device_file=None):
+    def push_file(self, pc_file, device_file):
+        """Transfer file from pc to device."""
         return self.output
 
     @command("pull")
-    def pull_file(self, device_file, pc_file=None):
+    def pull_file(self, device_file, pc_file):
+        """Transfer file from device to pc."""
         return self.output
 
     @command("shell pwd")
@@ -610,11 +612,14 @@ class Device(ADB):
     def push_files(
         self,
         pc_files: List[str],
-        device_files: List[str] = None,
+        device_files: List[str] = [],
         target_directory: str = None,
     ):
         """Transfer files from pc to device."""
-        outputs = []
+
+        if device_files is None:
+            device_files = []
+
         if not target_directory:
             target_directory = self.get_current_working_directory()
 
@@ -622,27 +627,27 @@ class Device(ADB):
             if device_file is None:
                 device_file = os.path.join(target_directory, os.path.basename(pc_file))
 
-            output = self.push_file(pc_file, device_file)
-            outputs.append(output)
-        return outputs
+            self.push_file(pc_file, device_file)
+
+        return self.output
 
     def pull_files(
         self,
         device_files: List[str],
-        pc_files: List[str] = None,
+        pc_files: List[str] = [],
         target_directory: str = None,
     ):
         """Transfer files from device to pc."""
+        if pc_files is None:
+            pc_files = []
 
         if not target_directory:
             target_directory = os.getcwd()
-        outputs = []
         for device_file, pc_file in zip_longest(device_files, pc_files):
             if pc_file is None:
                 pc_file = os.path.join(target_directory, os.path.basename(device_file))
-            output = self.pull_file(device_file, pc_file)
-            outputs.append(output)
-        return outputs
+            self.pull_file(device_file, pc_file)
+        return self.output
 
     @command("shell test -f")
     def file_exists(self, file_path: str):

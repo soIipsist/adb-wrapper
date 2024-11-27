@@ -38,8 +38,8 @@ package = environment_variables.get("PACKAGE")
 backup_path = environment_variables.get("BACKUP_FILE_PATH")
 image_path = environment_variables.get("IMAGE_PATH")
 permissions = environment_variables.get("PERMISSIONS")
-push_files = environment_variables.get("PUSH_FILES")
-pull_files = environment_variables.get("PULL_FILES")
+device_files = environment_variables.get("DEVICE_FILES")
+pc_files = environment_variables.get("PC_FILES")
 
 
 class TestAdb(TestBase):
@@ -258,12 +258,27 @@ class TestAdb(TestBase):
     def test_set_home_app(self):
         output = target_device.set_home_app(package)
 
+    def test_push_file(self):
+        self.assertTrue(os.path.exists(pc_path))
+        target_device.push_file(pc_path, device_path)
+
     def test_push_files(self):
-        # no path specified
-        target_device.push_file(pc_path)
+        target_device.push_files(
+            pc_files, target_directory="/storage/emulated/0/Download/"
+        )
+
+    def test_pull_file(self):
+        pc_path = "/Users/p/Desktop/conveyor_root.crt"
+        target_device.pull_file(device_path, pc_path)
+        self.assertTrue(os.path.exists(pc_path))
+
+        # no path provided
 
     def test_pull_files(self):
-        target_device.pull_file(device_path)
+        pc_files = []
+        target_device.pull_files(device_files, pc_files)
+
+        target_device.pull_files(device_files, target_directory="/Users/p/Desktop")
 
     def test_file_exists(self):
         # file that doesn't exist
@@ -391,11 +406,11 @@ if __name__ == "__main__":
         TestAdb.test_enable_usb_mode,
     ]
     root_methods = [
-        TestAdb.test_factory_reset,
-        TestAdb.test_root,
+        # TestAdb.test_factory_reset,
+        # TestAdb.test_root,
         TestAdb.test_unlock_bootloader,
-        TestAdb.test_fastboot_reboot,
-        TestAdb.test_fastboot_flash_boot,
+        # TestAdb.test_fastboot_reboot,
+        # TestAdb.test_fastboot_flash_boot,
     ]
 
     device_package_methods = [
@@ -436,11 +451,13 @@ if __name__ == "__main__":
         TestAdb.test_restore,
     ]
     device_file_methods = [
-        # TestAdb.test_file_exists,
-        # TestAdb.test_get_current_working_directory,
+        TestAdb.test_file_exists,
+        TestAdb.test_get_current_working_directory,
         TestAdb.test_is_valid_path,
-        # TestAdb.test_push_files,
-        # TestAdb.test_pull_files,
+        TestAdb.test_push_file,
+        TestAdb.test_push_files,
+        TestAdb.test_pull_files,
+        TestAdb.test_pull_file,
     ]
     device_event_methods = [
         TestAdb.test_execute_touch_event,
@@ -456,8 +473,9 @@ if __name__ == "__main__":
         TestAdb.test_make_executable,
     ]
 
-    device_methods = device_file_methods
+    device_methods = device_event_methods
+    methods = root_methods
     # methods = adb_methods
-    methods = device_methods
+    # methods = device_methods
     # methods = util_methods
     run_test_methods(methods)
