@@ -34,6 +34,8 @@ package = environment_variables.get("PACKAGE")
 backup_path = environment_variables.get("BACKUP_FILE_PATH")
 image_path = environment_variables.get("IMAGE_PATH")
 permissions = environment_variables.get("PERMISSIONS")
+push_files = environment_variables.get("PUSH_FILES")
+pull_files = environment_variables.get("PULL_FILES")
 
 
 class TestAdb(TestBase):
@@ -50,13 +52,16 @@ class TestAdb(TestBase):
             self.assertTrue(device.id is not None)
             print(device.id)
 
-    def test_check_sdk_path(self):
-        sdk_path = adb.check_sdk_path()
+    def test_get_device(self):
+        device = adb.get_device()
 
-        print(sdk_path)
-        self.assertTrue(sdk_path is not None)
+        if device:
+            self.assertTrue(isinstance(device, Device))
+
+    def test_check_sdk_path(self):
+        # check sdk with environment vars set locally or globally
+        sdk_path = adb.check_sdk_path()
         self.assertTrue(os.path.exists(sdk_path))
-        # print(os.environ.get("PATH"))
 
     def test_connect(self):
         output = adb.connect(device_ip)
@@ -194,11 +199,19 @@ class TestAdb(TestBase):
     def test_set_home_app(self):
         output = target_device.set_home_app(package)
 
-    def test_push_file(self):
-        output = target_device.push_file(pc_path, device_path)
+    def test_push_files(self):
+        # no path specified
+        target_device.push_file(pc_path)
 
-    def test_pull_file(self):
-        target_device.pull_file(device_path, pc_path)
+    def test_pull_files(self):
+        target_device.pull_file(device_path, None)
+
+    def test_file_exists(self):
+        target_device.file_exists(device_path)
+
+    def test_get_current_working_directory(self):
+        pwd = target_device.get_current_working_directory()
+        print(pwd)
 
     def test_get_shell_property(self):
         prop = target_device.get_shell_property("ro.product.model")
@@ -290,6 +303,7 @@ if __name__ == "__main__":
     adb_methods = [
         TestAdb.test_check_sdk_path,
         # TestAdb.test_get_devices,
+        # TestAdb.test_get_device,
         # TestAdb.test_connect,
         # TestAdb.test_get_ip,
         # TestAdb.test_execute_command,
@@ -327,8 +341,9 @@ if __name__ == "__main__":
         # TestAdb.test_enable_wifi,
         # TestAdb.test_backup,
         # TestAdb.test_restore,
-        # TestAdb.test_push_file,
-        # TestAdb.test_pull_file,
+        # TestAdb.test_get_current_working_directory,
+        # TestAdb.test_push_files,
+        # TestAdb.test_pull_files,
         # TestAdb.test_get_shell_property,
         # TestAdb.test_execute_touch_event,
         # TestAdb.test_expand_notifications,
@@ -338,11 +353,11 @@ if __name__ == "__main__":
         # TestAdb.test_load_env,
         # TestAdb.test_download_link,
         # TestAdb.test_download_sdk_platform_tools,
-        TestAdb.test_set_path_environment_variable,
-        # TestAdb.test_find_variable_in_path,
+        # TestAdb.test_set_path_environment_variable,
+        TestAdb.test_find_variable_in_path,
     ]
 
-    # methods = adb_methods
+    methods = adb_methods
     # methods = device_methods
-    methods = util_methods
+    # methods = util_methods
     run_test_methods(methods)

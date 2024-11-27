@@ -1,4 +1,5 @@
 from enum import Enum
+from itertools import zip_longest
 from pathlib import Path
 import subprocess
 import shlex
@@ -27,7 +28,7 @@ def command(command: str, logging: bool = True, base_cmd="adb"):
                 command_args.insert(2, device_id)
 
             if args:
-                args = [str(arg) for arg in args]
+                args = [str(arg) for arg in args if arg is not None]
                 command_args.extend(args)
 
             process = subprocess.Popen(
@@ -150,7 +151,9 @@ class ADB:
 
         sdk_path = find_variable_in_path("platform-tools")
 
-        if not sdk_path:  # download sdk platform tools, if adb doesn't exist in PATH
+        if not sdk_path or not os.path.exists(
+            sdk_path
+        ):  # download sdk platform tools, if adb doesn't exist in PATH
             user_input = (
                 input(
                     "ADB was not found in your PATH environment variable. "
@@ -176,6 +179,9 @@ class ADB:
                     raise RuntimeError("Failed to download SDK platform-tools.")
 
                 set_path_environment_variable(sdk_path, set_globally)
+
+                # grant permissions to adb and fastboot
+
                 return str(sdk_path)
             else:
                 raise FileNotFoundError(
@@ -532,12 +538,37 @@ class Device(ADB):
         return self.output
 
     @command("push")
-    def push_file(self, pc_path, device_path):
+    def push_file(self, pc_file, device_file=None):
         return self.output
 
     @command("pull")
-    def pull_file(self, device_path, pc_path):
+    def pull_file(self, device_file, pc_file=None):
         return self.output
+
+    @command("shell pwd")
+    def get_current_working_directory(self):
+        return self.output
+
+    def push_files(self, pc_files: List[str], device_files: List[str] = None):
+        for pc_file, device_file in zip_longest(pc_files, device_files):
+            if device_file is None:
+                cwd = self.get_current_working_directory()
+                device_file = (
+                    os.path.join(cwd, os.path.basename(pc_file)) if cwd else None
+                )
+
+            self.push_file(pc_file, device_file)
+
+    def pull_files(self, device_files: List[str], pc_files: List[str] = None):
+        for device_file, pc_file in zip_longest(device_files, pc_files):
+            if pc_file is None:
+                cwd = os.getcwd()
+                pc_file = os.path.join(cwd, os.path.basename(device_file))
+            self.pull_file(device_file, pc_file)
+
+    @command("adb shell test -f")
+    def file_exists(self, file_path: str):
+        return self.return_code
 
     # works if rooted
     @command("shell am broadcast -a android.intent.action.MASTER_CLEAR")
@@ -564,17 +595,9 @@ class Device(ADB):
         for p in permissions:
             self.grant_permission(package, p)
 
-    def push_files(self, pc_files: List[str], device_path="/sdcard"):
-        for f in pc_files:
-            self.push_file(f, device_path)
-
-    def pull_files(self, device_files: List[str], pc_path):
-        for f in device_files:
-            self.pull_file(f, pc_path)
-
     def revoke_permissions(self, package, permissions: List[str]):
-        for p in permissions:
-            self.revoke_permission(package, p)
+        for permission in permissions:
+            self.revoke_permission(package, permission)
 
     def google_debloat(self):
         google_packages = self.get_google_packages()
