@@ -47,9 +47,12 @@ def command(command: str, logging: bool = True, base_cmd="adb", log_cmd: bool = 
             )
 
             if process.returncode != 0:
-                raise subprocess.CalledProcessError(
-                    process.returncode, command_args, output.encode()
-                )
+                if "permission denied" in output.lower():
+                    raise PermissionError("Permission issue occurred during execution.")
+                elif "unknown" in output.lower():
+                    raise FileNotFoundError(f"Command not found: {command_args}")
+                elif "error" in output.lower():
+                    raise RuntimeError(f"Critical error: {process.stderr.strip()}")
 
             setattr(cls, "return_code", process.returncode)
             setattr(cls, "output", output)
@@ -302,8 +305,7 @@ class Device(ADB):
             image_path = "boot.img"
 
         try:
-            bootloader_status = self.get_bootloader_status()
-            if bootloader_status.strip() == "1":
+            if self.is_bootloader_locked():
                 print("Your bootloader is locked. Unlock it before proceeding.")
                 return
             if root_method == RootMethod.MAGISK:
@@ -387,9 +389,8 @@ class Device(ADB):
     def unlock_bootloader(self):
         return self.output
 
-    @command("shell getprop ro.boot.flash.locked")
-    def get_bootloader_status(self):
-        return self.output
+    def is_bootloader_locked(self):
+        return bool(self.get_shell_property("ro.boot.flash.locked"))
 
     def get_model(self):
         return self.get_shell_property("ro.product.model")
@@ -438,7 +439,7 @@ class Device(ADB):
 
         return list(filtered_packages)
 
-    @command("shell getprop")
+    @command("shell getprop", logging=False)
     def get_shell_property(self, prop):
         return self.output
 
@@ -463,28 +464,31 @@ class Device(ADB):
         return packages
 
     def get_settings(self):
-        system_settings = self.get_system_settings()
-        global_settings = self.get_global_settings()
-        secure_settings = self.get_secure_settings()
+        self.system_settings = self.get_system_settings()
+        self.global_settings = self.get_global_settings()
+        self.secure_settings = self.get_secure_settings()
 
         settings = {
-            SettingsType.SYSTEM.value: system_settings,
-            SettingsType.GLOBAL.value: global_settings,
-            SettingsType.SECURE.value: secure_settings,
+            SettingsType.SYSTEM.value: self.system_settings,
+            SettingsType.GLOBAL.value: self.global_settings,
+            SettingsType.SECURE.value: self.secure_settings,
         }
         return settings
 
-    @command(f"shell settings list {SettingsType.SYSTEM.value}")
+    @command(f"shell settings list {SettingsType.SYSTEM.value}", logging=False)
     def get_system_settings(self):
-        return self.parse_settings(self.output)
+        system_settings = self.parse_settings(self.output)
+        return system_settings
 
-    @command(f"shell settings list {SettingsType.GLOBAL.value}")
+    @command(f"shell settings list {SettingsType.GLOBAL.value}", logging=False)
     def get_global_settings(self):
-        return self.parse_settings(self.output)
+        global_settings = self.parse_settings(self.output)
+        return global_settings
 
-    @command(f"shell settings list {SettingsType.SECURE.value}")
+    @command(f"shell settings list {SettingsType.SECURE.value}", logging=False)
     def get_secure_settings(self):
-        return self.parse_settings(self.output)
+        secure_settings = self.parse_settings(self.output)
+        return secure_settings
 
     @command("shell svc wifi enable")
     def enable_wifi(self):
@@ -661,7 +665,7 @@ class Device(ADB):
         self.execute(cmd)
         return self.output
 
-    def get_setting_cmd(self, input):
+    def get_setting_cmd(self, input: str):
         # format can be:
         # a) namespace.key=value
         # b) namespace.key value

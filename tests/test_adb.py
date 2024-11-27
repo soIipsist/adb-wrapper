@@ -94,14 +94,9 @@ class TestAdb(TestBase):
     def test_execute_command(self):
         output = adb.execute("version")
 
-    # device methods
+    # device package methods
     def test_get_packages(self):
         packages = target_device.get_packages()
-
-    def test_get_ip(self):
-        new_device_ip = target_device.get_device_ip()
-        new_device_ip = new_device_ip + ":5555"
-        self.assertTrue(new_device_ip == device_ip)
 
     def test_get_third_party_packages(self):
         packages = target_device.get_third_party_packages()
@@ -135,22 +130,6 @@ class TestAdb(TestBase):
 
         print(len(filtered), len(packages))
 
-    def test_get_system_settings(self):
-        system_settings = target_device.get_system_settings()
-        self.assertTrue(isinstance(system_settings, dict))
-
-    def test_get_global_settings(self):
-        global_settings = target_device.get_global_settings()
-        self.assertTrue(isinstance(global_settings, dict))
-
-    def test_get_secure_settings(self):
-        secure_settings = target_device.get_secure_settings()
-        self.assertTrue(isinstance(secure_settings, dict))
-
-    def test_get_settings(self):
-        settings = target_device.get_settings()
-        global_settings = settings.get("global")
-
     def test_install_packages(self):
         output = target_device.install_package("com.google.android.apps.youtube.music")
 
@@ -168,6 +147,70 @@ class TestAdb(TestBase):
     def test_google_debloat(self):
         output = target_device.google_debloat()
 
+    # device settings methods
+
+    def test_get_ip(self):
+        new_device_ip = target_device.get_device_ip()
+        new_device_ip = new_device_ip + ":5555"
+        self.assertTrue(new_device_ip == device_ip)
+
+    def test_get_shell_property(self):
+        prop = target_device.get_shell_property("ro.product.model")
+        sdk = target_device.get_sdk()
+        name = target_device.get_name()
+        model = target_device.get_model()
+
+        print(prop)
+        print(sdk)
+        print(name)
+        print(model)
+
+    def test_is_bootloader_locked(self):
+        status = target_device.is_bootloader_locked()
+        self.assertTrue(isinstance(status, bool))
+        print(status)
+
+    def test_get_system_settings(self):
+        system_settings = target_device.get_system_settings()
+        self.assertTrue(isinstance(system_settings, dict))
+        # print(system_settings)
+
+    def test_get_global_settings(self):
+        global_settings = target_device.get_global_settings()
+        self.assertTrue(isinstance(global_settings, dict))
+
+    def test_get_secure_settings(self):
+        secure_settings = target_device.get_secure_settings()
+        self.assertTrue(isinstance(secure_settings, dict))
+
+    def test_get_settings(self):
+        settings = target_device.get_settings()
+        global_settings = settings.get("global")
+        print(global_settings)
+
+    def test_set_settings(self):
+        settings = [
+            "global.user_switcher_enabled=1",
+            "secure.lock_screen_show_notifications=1",
+        ]
+
+        # format can be:
+        # a) namespace.key=value
+        # b) namespace.key value
+        # c) namespace.key.other_value value
+        target_device.set_settings(settings)
+        target_device.get_settings()
+
+        user_switcher = target_device.global_settings.get("user_switcher_enabled")
+        print(user_switcher)
+
+        self.assertTrue(user_switcher == "1")
+
+        show_lockscreen_notifications = target_device.secure_settings.get(
+            "lock_screen_show_notifications"
+        )
+        print(show_lockscreen_notifications)
+
     def test_disable_lockscreen(self):
         output = target_device.disable_lock_screen()
 
@@ -182,18 +225,6 @@ class TestAdb(TestBase):
 
     def test_enable_wifi(self):
         target_device.enable_wifi()
-
-    def test_set_settings(self):
-        settings = [
-            "global.user_switcher_enabled=0",
-            "secure.lock_screen_show_notifications=0",
-        ]
-
-        # format can be:
-        # a) namespace.key=value
-        # b) namespace.key value
-        # c) namespace.key.other_value value
-        target_device.set_settings(settings)
 
     def test_set_password(self):
         password = "1234"
@@ -231,12 +262,7 @@ class TestAdb(TestBase):
         pwd = target_device.get_current_working_directory()
         print(pwd)
 
-    def test_get_shell_property(self):
-        prop = target_device.get_shell_property("ro.product.model")
-        sdk = target_device.get_sdk()
-        name = target_device.get_name()
-        model = target_device.get_model()
-
+    # device event methods
     def test_execute_touch_event(self):
         x = 100
         y = 1000
@@ -254,10 +280,6 @@ class TestAdb(TestBase):
         target_device.root(RootMethod.MAGISK)
         # target_device.root(RootMethod.APATCH)
         # target_device.root(RootMethod.KERNELSU)
-
-    def test_get_bootloader_status(self):
-        status = target_device.get_bootloader_status()
-        print(status)
 
     def test_unlock_bootloader(self):
         target_device.unlock_bootloader()
@@ -331,73 +353,74 @@ class TestAdb(TestBase):
 
 if __name__ == "__main__":
     adb_methods = [
-        # TestAdb.test_check_sdk_path,
-        # TestAdb.test_get_devices,
-        # TestAdb.test_get_device,
-        # TestAdb.test_connect,
-        # TestAdb.test_disconnect,
-        # TestAdb.test_execute_command,
-        # TestAdb.test_enable_tcpip_mode,
-        # TestAdb.test_enable_usb_mode
+        TestAdb.test_check_sdk_path,
+        TestAdb.test_get_devices,
+        TestAdb.test_get_device,
+        TestAdb.test_connect,
+        TestAdb.test_disconnect,
+        TestAdb.test_execute_command,
+        TestAdb.test_enable_tcpip_mode,
+        TestAdb.test_enable_usb_mode,
     ]
     root_methods = [
-        # TestAdb.test_factory_reset,
-        # TestAdb.test_root,
-        TestAdb.test_get_bootloader_status,
-        # TestAdb.test_unlock_bootloader,
-        # TestAdb.test_fastboot_reboot,
-        # TestAdb.test_fastboot_flash_boot,
+        TestAdb.test_factory_reset,
+        TestAdb.test_root,
+        TestAdb.test_unlock_bootloader,
+        TestAdb.test_fastboot_reboot,
+        TestAdb.test_fastboot_flash_boot,
     ]
 
     device_package_methods = [
-        # TestAdb.test_get_system_packages,
-        # TestAdb.test_get_google_packages,
-        # TestAdb.test_get_third_party_packages,
-        # TestAdb.test_get_packages,
-        # TestAdb.test_filter_packages,
-        # TestAdb.test_grant_permissions,
-        # TestAdb.test_revoke_permissions,
-        # TestAdb.test_install_packages,
-        # TestAdb.test_uninstall_packages,
-        # TestAdb.test_google_debloat,
+        TestAdb.test_get_system_packages,
+        TestAdb.test_get_google_packages,
+        TestAdb.test_get_third_party_packages,
+        TestAdb.test_get_packages,
+        TestAdb.test_filter_packages,
+        TestAdb.test_grant_permissions,
+        TestAdb.test_revoke_permissions,
+        TestAdb.test_install_packages,
+        TestAdb.test_uninstall_packages,
+        TestAdb.test_google_debloat,
     ]
     device_settings_methods = [
-        TestAdb.test_get_ip,
+        # TestAdb.test_get_ip,
         # TestAdb.test_get_system_settings,
         # TestAdb.test_get_global_settings,
         # TestAdb.test_get_secure_settings,
         # TestAdb.test_get_settings,
         # TestAdb.test_set_settings,
+        # TestAdb.test_is_bootloader_locked,
         # TestAdb.test_get_shell_property,
-    ]
-    device_network_methods = [
+        # TestAdb.test_disable_lockscreen,
+        # TestAdb.test_set_password,
+        # TestAdb.test_clear_password,
         # TestAdb.test_disable_mobile_data,
         # TestAdb.test_enable_mobile_data,
         # TestAdb.test_disable_wifi,
-        # TestAdb.test_enable_wifi,
+        TestAdb.test_enable_wifi,
     ]
 
     device_backup_methods = [
-        # TestAdb.test_backup,
-        # TestAdb.test_restore,
+        TestAdb.test_backup,
+        TestAdb.test_restore,
     ]
     device_file_methods = [
-        # TestAdb.test_get_current_working_directory,
-        # TestAdb.test_push_files,
-        # TestAdb.test_pull_files,
+        TestAdb.test_get_current_working_directory,
+        TestAdb.test_push_files,
+        TestAdb.test_pull_files,
     ]
     device_event_methods = [
-        # TestAdb.test_execute_touch_event,
-        # TestAdb.test_expand_notifications,
+        TestAdb.test_execute_touch_event,
+        TestAdb.test_expand_notifications,
     ]
 
     util_methods = [
-        # TestAdb.test_load_env,
-        # TestAdb.test_download_link,
-        # TestAdb.test_download_sdk_platform_tools,
-        # TestAdb.test_set_path_environment_variable,
-        # TestAdb.test_find_variable_in_path,
-        # TestAdb.test_make_executable,
+        TestAdb.test_load_env,
+        TestAdb.test_download_link,
+        TestAdb.test_download_sdk_platform_tools,
+        TestAdb.test_set_path_environment_variable,
+        TestAdb.test_find_variable_in_path,
+        TestAdb.test_make_executable,
     ]
 
     device_methods = device_settings_methods
