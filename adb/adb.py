@@ -10,11 +10,16 @@ from functools import wraps
 from importlib import resources
 import json
 
+sdk_checked: bool = False
+
 
 def command(command: str, logging: bool = True, base_cmd="adb"):
     def decorator(func):
         @wraps(func)
         def wrapper(cls, *args, **kwargs):
+            global sdk_checked
+            if not sdk_checked and isinstance(cls, ADB):
+                cls.check_sdk_path()
 
             if not isinstance(command, str):
                 raise TypeError("command is not of type string.")
@@ -128,12 +133,10 @@ class ADB:
     output: str = None
     sdk_path = None
     google_packages: list = []
-
     _global_env: bool = False
 
     def __init__(self, global_env: bool = False) -> None:
         self.global_env = global_env
-        self.sdk_path = self.check_sdk_path(self.global_env)
 
     @property
     def global_env(self):
@@ -143,7 +146,7 @@ class ADB:
     def global_env(self, global_env: bool):
         self._global_env = global_env
 
-    def check_sdk_path(self, set_globally: bool = False):
+    def check_sdk_path(self):
         """
         Checks if 'platform-tools' exists in the PATH environment variable.
         Prompts the user to download it if not found and returns the platform-tools directory.
@@ -178,19 +181,23 @@ class ADB:
                 if not sdk_path:
                     raise RuntimeError("Failed to download SDK platform-tools.")
 
-                set_path_environment_variable(sdk_path, set_globally)
+                set_path_environment_variable(sdk_path, self.global_env)
 
                 # grant permissions to adb and fastboot
                 adb_path = os.path.join(sdk_path, "adb")
                 fastboot_path = os.path.join(sdk_path, "fastboot")
                 make_executable(adb_path)
                 make_executable(fastboot_path)
+                self.sdk_path = sdk_path
                 return str(sdk_path)
             else:
                 raise FileNotFoundError(
                     "ADB commands cannot be executed because platform-tools was not found."
                 )
 
+        self.sdk_path = sdk_path
+        global sdk_checked
+        sdk_checked = True
         return sdk_path
 
     def get_google_packages(self):

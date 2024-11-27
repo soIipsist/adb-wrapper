@@ -1,4 +1,5 @@
 from pprint import PrettyPrinter
+import shutil
 from adb.utils import (
     load_env,
     download_file_from_link,
@@ -16,6 +17,7 @@ from adb.adb import (
     magisk_url,
     apatch_url,
     kernelsu_url,
+    sdk_checked,
 )
 import os
 
@@ -60,9 +62,18 @@ class TestAdb(TestBase):
             self.assertTrue(isinstance(device, Device))
 
     def test_check_sdk_path(self):
+
+        # remove sdk platform tools
+        sdk_path = find_variable_in_path("platform-tools")
+        shutil.rmtree(sdk_path)
+
         # check sdk with environment vars set locally or globally
+        # adb.global_env = True
         sdk_path = adb.check_sdk_path()
         self.assertTrue(os.path.exists(sdk_path))
+        self.assertTrue(adb.sdk_path == sdk_path)
+
+        adb.get_device()
 
     def test_connect(self):
         output = adb.connect(device_ip)
@@ -332,32 +343,44 @@ if __name__ == "__main__":
         # TestAdb.test_fastboot_reboot,
         # TestAdb.test_fastboot_flash_boot,
     ]
-    device_methods = [
+
+    device_package_methods = [
         # TestAdb.test_get_system_packages,
         # TestAdb.test_get_google_packages,
         # TestAdb.test_get_third_party_packages,
         # TestAdb.test_get_packages,
         # TestAdb.test_filter_packages,
-        # TestAdb.test_get_system_settings,
-        # TestAdb.test_get_global_settings,
-        # TestAdb.test_get_secure_settings,
-        # TestAdb.test_get_settings,
-        # TestAdb.test_set_settings,
         # TestAdb.test_grant_permissions,
         # TestAdb.test_revoke_permissions,
         # TestAdb.test_install_packages,
         # TestAdb.test_uninstall_packages,
         # TestAdb.test_google_debloat,
+    ]
+    device_settings_methods = [
+        TestAdb.test_get_system_settings,
+        # TestAdb.test_get_global_settings,
+        # TestAdb.test_get_secure_settings,
+        # TestAdb.test_get_settings,
+        # TestAdb.test_set_settings,
+        # TestAdb.test_get_shell_property,
+    ]
+    device_network_methods = [
         # TestAdb.test_disable_mobile_data,
         # TestAdb.test_enable_mobile_data,
         # TestAdb.test_disable_wifi,
         # TestAdb.test_enable_wifi,
+    ]
+
+    device_backup_methods = [
         # TestAdb.test_backup,
         # TestAdb.test_restore,
+    ]
+    device_file_methods = [
         # TestAdb.test_get_current_working_directory,
         # TestAdb.test_push_files,
         # TestAdb.test_pull_files,
-        # TestAdb.test_get_shell_property,
+    ]
+    device_event_methods = [
         # TestAdb.test_execute_touch_event,
         # TestAdb.test_expand_notifications,
     ]
@@ -371,7 +394,7 @@ if __name__ == "__main__":
         # TestAdb.test_make_executable,
     ]
 
-    # methods = adb_methods
-    # methods = device_methods
-    methods = util_methods
+    methods = adb_methods
+    # methods = device_package_methods
+    # methods = util_methods
     run_test_methods(methods)
