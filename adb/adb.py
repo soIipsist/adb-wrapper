@@ -234,17 +234,31 @@ class ADB:
         self.google_packages = packages
         return packages
 
-    @command("tcpip")
-    def enable_tcpip_mode(self, port="5555"):
-        return self.output
+    def enable_tcpip_mode(self, port=None):
+        if port is None:
+            port = "5555"
+        return self.execute(f"tcpip {port}")
 
     @command("usb")
     def enable_usb_mode(self):
         return self.output
 
-    def connect(self, device_ip: str, kill_server: bool = False):
+    def connect(
+        self,
+        device_ip: str,
+        kill_server: bool = False,
+        enable_tcp: bool = False,
+        start_server: bool = False,
+    ):
         if kill_server:
-            self.execute("kill server")
+            self.execute("kill-server")
+
+        if enable_tcp:
+            self.enable_tcpip_mode()
+
+        if start_server:
+            self.execute("start-server")
+
         self.execute(f"connect {device_ip}")
 
         return self.output
@@ -253,7 +267,7 @@ class ADB:
     def disconnect(self, device_ip: str):
         return self.output
 
-    @command("devices")
+    @command("devices", logging=False)
     def get_devices(self) -> List["Device"]:
         """
         Checks which devices are available and returns them as Device objects.
@@ -673,6 +687,14 @@ class Device(ADB):
 
     @command("shell ls", logging=False)
     def is_valid_path(self, path):
+        return not bool(self.return_code)
+
+    @command("shell ls -p", logging=False)
+    def get_files_in_directory(self, path):
+        return [o for o in self.output.splitlines() if not o.endswith("/")]
+
+    @command("shell test -d", logging=False)
+    def is_directory(self, path):
         return not bool(self.return_code)
 
     def push_files(
