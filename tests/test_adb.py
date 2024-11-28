@@ -35,7 +35,9 @@ apk_device_path = environment_variables.get("APK_DEVICE_PATH")
 device_path = environment_variables.get("DEVICE_PATH")
 device_ip = environment_variables.get("DEVICE_IP")
 packages = environment_variables.get("PACKAGES")
+package_paths = environment_variables.get("PACKAGE_PATHS")
 package = packages[0]
+package_path = package_paths[0]
 backup_path = environment_variables.get("BACKUP_FILE_PATH")
 image_path = environment_variables.get("IMAGE_PATH")
 permissions = environment_variables.get("PERMISSIONS")
@@ -155,26 +157,20 @@ class TestAdb(TestBase):
             print("PACKAGE NAME", package_name)
 
     def test_install_package(self):
-        # package name provided
-        target_device.install_package("com.google.android.apps.youtube.music")
+        # package path is a device path
+        # target_device.install_package(Package(package_path=apk_pc_path))
 
-        # package path provided
-        target_device.install_package("com.google.android.apps")
+        # package path is a package
+        target_device.install_package(apk_pc_path)
 
-    def test_install_packages(self):
-        packages = [
-            Package(package_name="com.google.android.apps.youtube.music"),
-            "com.google.android.apps.youtube.music",
-        ]
-        output = target_device.install_packages(packages)
+        # target_device.install_package("com")
 
     def test_uninstall_package(self):
-        target_device.uninstall_package()
+        # device path (should raise an error if it can't find the package name)
+        target_device.uninstall_package(apk_device_path)
 
-    def test_uninstall_packages(self):
-        output = target_device.uninstall_package(
-            "com.google.android.apps.youtube.music"
-        )
+        # package name
+        target_device.uninstall_package(packages[1])
 
     def test_grant_permissions(self):
         target_device.grant_permissions(package, permissions)
@@ -464,12 +460,10 @@ if __name__ == "__main__":
         # TestAdb.test_grant_permissions,
         # TestAdb.test_revoke_permissions,
         # TestAdb.test_get_package_path,
-        TestAdb.test_get_package_name,
-        # TestAdb.test_install_packages,
+        # TestAdb.test_get_package_name,
         # TestAdb.test_install_package,
         # TestAdb.test_uninstall_package,
-        # TestAdb.test_uninstall_packages,
-        # TestAdb.test_google_debloat,
+        TestAdb.test_google_debloat,
     ]
     device_settings_methods = [
         TestAdb.test_get_ip,

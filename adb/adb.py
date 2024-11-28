@@ -145,7 +145,7 @@ class Package:
             )
 
         packages = [package for package in packages if matches(package)]
-        return packages if len(packages) > 1 else packages[0]
+        return packages[0] if len(packages) == 1 else packages
 
 
 class ADB:
@@ -448,9 +448,11 @@ class Device(ADB):
             )
 
         if package.endswith(".apk"):
-            package = Package.filter_packages(self.get_packages(), package_path=package)
-            if package:
-                package = package.package_name
+            filtered = Package.filter_packages(
+                self.get_packages(), package_path=package
+            )
+            if filtered:
+                package = filtered.package_name
 
         return package
 
@@ -589,15 +591,21 @@ class Device(ADB):
         return self.parse_packages(self.output)
 
     def install_package(self, package):
-
         package_path = self.get_package_path(package)
-        return self.execute(f"install {package_path}")
+        print("Installing package {0}...".format(package_path))
+        is_shell_install = not os.path.exists(package_path)
+
+        cmd = (
+            f"shell pm install {package_path}"
+            if is_shell_install
+            else f"install {package_path}"
+        )
+        return self.execute(cmd)
 
     def uninstall_package(self, package):
-        if isinstance(package, Package):
-            package = package.package_name
-
-        return self.execute(f"uninstall --user 0 {package}")
+        package_name = self.get_package_name(package)
+        print("Uninstalling package {0}...".format(package_name))
+        return self.execute(f"uninstall --user 0 {package_name}")
 
     @command("shell cmd statusbar expand-notifications")
     def expand_notifications(self):
@@ -710,7 +718,6 @@ class Device(ADB):
 
     def install_packages(self, packages: List[str]):
         for p in packages:
-            print("Installing package {0}...".format(p))
             self.install_package(p)
 
     def uninstall_packages(self, packages: List[str]):
@@ -721,7 +728,6 @@ class Device(ADB):
         ]
 
         for p in packages:
-            print("Uninstalling package {0}...".format(p))
             self.uninstall_package(p)
 
     def grant_permissions(self, package, permissions: List[str]):
