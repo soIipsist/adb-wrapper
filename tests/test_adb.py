@@ -179,7 +179,7 @@ class TestAdb(TestBase):
         target_device.revoke_permissions(package, permissions)
 
     def test_google_debloat(self):
-        output = target_device.google_debloat()
+        target_device.google_debloat()
 
     # device settings methods
 
@@ -457,13 +457,13 @@ if __name__ == "__main__":
         # TestAdb.test_get_third_party_packages,
         # TestAdb.test_get_packages,
         # TestAdb.test_filter_packages,
-        # TestAdb.test_grant_permissions,
+        TestAdb.test_grant_permissions,
         # TestAdb.test_revoke_permissions,
         # TestAdb.test_get_package_path,
         # TestAdb.test_get_package_name,
         # TestAdb.test_install_package,
         # TestAdb.test_uninstall_package,
-        TestAdb.test_google_debloat,
+        # TestAdb.test_google_debloat,
     ]
     device_settings_methods = [
         TestAdb.test_get_ip,

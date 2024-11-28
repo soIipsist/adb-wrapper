@@ -634,11 +634,19 @@ class Device(ADB):
         return self.output
 
     @command("shell pm grant")
-    def grant_permission(self, package, permission):
+    def grant_permission(
+        self,
+        package,
+        permission,
+    ):
+        if self.return_code == 0:
+            print(f"Successfully granted package permission {permission} of {package}.")
         return self.output
 
     @command("shell pm revoke")
     def revoke_permission(self, package, permission):
+        if self.return_code == 0:
+            print(f"Successfully revoked package permission {permission} of {package}.")
         return self.output
 
     @command("shell cmd package set-home-activity")
@@ -722,17 +730,16 @@ class Device(ADB):
 
     def uninstall_packages(self, packages: List[str]):
         packages = [
-            package
+            package.package_name if isinstance(package, Package) else package
             for package in packages
             if package not in self.do_not_delete_packages
         ]
-
         for p in packages:
             self.uninstall_package(p)
 
     def grant_permissions(self, package, permissions: List[str]):
-        for p in permissions:
-            self.grant_permission(package, p)
+        for permission in permissions:
+            self.grant_permission(package, permission)
 
     def revoke_permissions(self, package, permissions: List[str]):
         for permission in permissions:
