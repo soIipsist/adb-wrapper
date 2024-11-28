@@ -136,7 +136,7 @@ class Package:
         return f"{self.package_name}"
 
     @classmethod
-    def filter_packages(self, packages: list, **filters):
+    def filter_packages(self, packages: List["Package"], **filters):
         def matches(package):
             return all(
                 getattr(package, key) == value
@@ -144,7 +144,8 @@ class Package:
                 if value is not None
             )
 
-        return [package for package in packages if matches(package)]
+        packages = [package for package in packages if matches(package)]
+        return packages if len(packages) > 1 else packages[0]
 
 
 class ADB:
@@ -423,6 +424,36 @@ class Device(ADB):
     def get_sdk(self):
         return self.get_shell_property("ro.build.version.sdk")
 
+    def get_package_path(self, package):
+        if isinstance(package, Package):
+            package = (
+                package.package_path
+                if package.package_path is not None
+                else package.package_name
+            )
+
+        if not package.endswith(
+            ".apk"
+        ):  # use shell pm <package_name> to get package path
+            output = self.execute(f"shell pm path {package}")
+            package = output if output else package
+        return package
+
+    def get_package_name(self, package):
+        if isinstance(package, Package):
+            package = (
+                package.package_name
+                if package.package_name is not None
+                else package.package_path
+            )
+
+        if package.endswith(".apk"):
+            package = Package.filter_packages(self.get_packages(), package_path=package)
+            if package:
+                package = package.package_name
+
+        return package
+
     def get_packages(
         self,
         package_type: PackageType = None,
@@ -558,15 +589,9 @@ class Device(ADB):
         return self.parse_packages(self.output)
 
     def install_package(self, package):
-        if isinstance(package, Package):
-            package = package.package_name
 
-        return self.execute(f"install {package}")
-
-    def reinstall_package(self, package):
-        if isinstance(package, Package):
-            package = package.package_name
-        return self.execute(f"reinstall {package}")
+        package_path = self.get_package_path(package)
+        return self.execute(f"install {package_path}")
 
     def uninstall_package(self, package):
         if isinstance(package, Package):

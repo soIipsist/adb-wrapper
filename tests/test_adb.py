@@ -34,7 +34,8 @@ apk_pc_path = environment_variables.get("APK_PC_PATH")
 apk_device_path = environment_variables.get("APK_DEVICE_PATH")
 device_path = environment_variables.get("DEVICE_PATH")
 device_ip = environment_variables.get("DEVICE_IP")
-package = environment_variables.get("PACKAGE")
+packages = environment_variables.get("PACKAGES")
+package = packages[0]
 backup_path = environment_variables.get("BACKUP_FILE_PATH")
 image_path = environment_variables.get("IMAGE_PATH")
 permissions = environment_variables.get("PERMISSIONS")
@@ -131,14 +132,41 @@ class TestAdb(TestBase):
 
         print(len(filtered), len(packages))
 
-    def test_install_package(self):
-        pass
+    def test_get_package_path(self):
+        package_paths = [
+            Package(package_name="com.google.android.apps.youtube.music"),
+            Package(package_path=apk_device_path),
+            apk_device_path,
+        ]
 
-    def test_reinstall_package(self):
-        pass
+        for p in package_paths:
+            package_path = target_device.get_package_path(p)
+            print(package_path)
+
+    def test_get_package_name(self):
+        package_names = [
+            Package(package_name="com.google.android.apps.youtube.music"),
+            Package(package_path=package),
+            "/system/product/app/FMRadio/FMRadio.apk",
+        ]
+
+        for p in package_names:
+            package_name = target_device.get_package_name(p)
+            print("PACKAGE NAME", package_name)
+
+    def test_install_package(self):
+        # package name provided
+        target_device.install_package("com.google.android.apps.youtube.music")
+
+        # package path provided
+        target_device.install_package("com.google.android.apps")
 
     def test_install_packages(self):
-        output = target_device.install_package("com.google.android.apps.youtube.music")
+        packages = [
+            Package(package_name="com.google.android.apps.youtube.music"),
+            "com.google.android.apps.youtube.music",
+        ]
+        output = target_device.install_packages(packages)
 
     def test_uninstall_package(self):
         target_device.uninstall_package()
@@ -338,7 +366,7 @@ class TestAdb(TestBase):
 
     def test_is_oem_unlock_supported(self):
         is_supported = target_device.is_oem_unlock_supported()
-        print(is_supported)
+        self.assertTrue(is_supported)
 
     def test_fastboot_reboot(self):
         target_device.fastboot_reboot()
@@ -423,18 +451,20 @@ if __name__ == "__main__":
         # TestAdb.test_root,
         # TestAdb.test_unlock_bootloader,
         TestAdb.test_is_oem_unlock_supported,
-        # TestAdb.test_fastboot_reboot,
-        # TestAdb.test_fastboot_flash_boot,
+        TestAdb.test_fastboot_reboot,
+        TestAdb.test_fastboot_flash_boot,
     ]
 
     device_package_methods = [
-        TestAdb.test_get_system_packages,
+        # TestAdb.test_get_system_packages,
         # TestAdb.test_get_google_packages,
         # TestAdb.test_get_third_party_packages,
         # TestAdb.test_get_packages,
         # TestAdb.test_filter_packages,
         # TestAdb.test_grant_permissions,
         # TestAdb.test_revoke_permissions,
+        # TestAdb.test_get_package_path,
+        TestAdb.test_get_package_name,
         # TestAdb.test_install_packages,
         # TestAdb.test_install_package,
         # TestAdb.test_uninstall_package,
