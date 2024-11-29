@@ -674,16 +674,24 @@ class Device(ADB):
     @command("push")
     def push_file(self, pc_file, device_file):
         """Transfer file from pc to device."""
+        print(f"Transferred file {pc_file} to {device_file}.")
         return self.output
 
     @command("pull")
     def pull_file(self, device_file, pc_file):
         """Transfer file from device to pc."""
+        print(f"Transferred file {device_file} to {pc_file}.")
         return self.output
 
     @command("shell pwd")
     def get_current_working_directory(self):
         return self.output
+
+    def get_default_download_directory(self):
+        default_download_directory = "/storage/emulated/0/Download"
+        output = self.execute(f"shell ls {default_download_directory}", logging=False)
+
+        return default_download_directory if output else "/sdcard"
 
     @command("shell ls", logging=False)
     def is_valid_path(self, path):
@@ -701,19 +709,21 @@ class Device(ADB):
         self,
         pc_files: List[str],
         device_files: List[str] = [],
-        target_directory: str = None,
+        destination_directory: str = None,
     ):
         """Transfer files from pc to device."""
 
         if device_files is None:
             device_files = []
 
-        if not target_directory:
-            target_directory = self.get_current_working_directory()
+        if not destination_directory:
+            destination_directory = self.get_default_download_directory()
 
         for pc_file, device_file in zip_longest(pc_files, device_files):
             if device_file is None:
-                device_file = os.path.join(target_directory, os.path.basename(pc_file))
+                device_file = os.path.join(
+                    destination_directory, os.path.basename(pc_file)
+                )
 
             self.push_file(pc_file, device_file)
 
@@ -723,17 +733,20 @@ class Device(ADB):
         self,
         device_files: List[str],
         pc_files: List[str] = [],
-        target_directory: str = None,
+        destination_directory: str = None,
     ):
         """Transfer files from device to pc."""
         if pc_files is None:
             pc_files = []
 
-        if not target_directory:
-            target_directory = os.getcwd()
+        if not destination_directory:
+            destination_directory = os.getcwd()
+
         for device_file, pc_file in zip_longest(device_files, pc_files):
             if pc_file is None:
-                pc_file = os.path.join(target_directory, os.path.basename(device_file))
+                pc_file = os.path.join(
+                    destination_directory, os.path.basename(device_file)
+                )
             self.pull_file(device_file, pc_file)
         return self.output
 

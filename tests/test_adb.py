@@ -297,7 +297,7 @@ class TestAdb(TestBase):
 
     def test_push_files(self):
         target_device.push_files(
-            pc_files, target_directory="/storage/emulated/0/Download/"
+            pc_files, destination_directory="/storage/emulated/0/Download/"
         )
 
     def test_pull_file(self):
@@ -311,7 +311,7 @@ class TestAdb(TestBase):
         pc_files = []
         target_device.pull_files(device_files, pc_files)
 
-        target_device.pull_files(device_files, target_directory="/Users/p/Desktop")
+        target_device.pull_files(device_files, destination_directory="/Users/p/Desktop")
 
     def test_file_exists(self):
         # file that doesn't exist
@@ -326,6 +326,10 @@ class TestAdb(TestBase):
 
     def test_get_current_working_directory(self):
         pwd = target_device.get_current_working_directory()
+
+    def test_get_default_download_directory(self):
+        dd = target_device.get_default_download_directory()
+        print(dd)
 
     def test_is_valid_path(self):
         path = "/storage/emulated/0/Download"
@@ -491,13 +495,14 @@ if __name__ == "__main__":
         TestAdb.test_restore,
     ]
     device_file_methods = [
-        TestAdb.test_file_exists,
-        TestAdb.test_get_current_working_directory,
-        TestAdb.test_is_valid_path,
-        TestAdb.test_push_file,
-        TestAdb.test_push_files,
-        TestAdb.test_pull_files,
-        TestAdb.test_pull_file,
+        # TestAdb.test_file_exists,
+        # TestAdb.test_get_current_working_directory,
+        TestAdb.test_get_default_download_directory,
+        # TestAdb.test_is_valid_path,
+        # TestAdb.test_push_file,
+        # TestAdb.test_push_files,
+        # TestAdb.test_pull_files,
+        # TestAdb.test_pull_file,
     ]
     device_event_methods = [
         TestAdb.test_execute_touch_event,
@@ -513,7 +518,7 @@ if __name__ == "__main__":
         TestAdb.test_make_executable,
     ]
 
-    device_methods = device_package_methods
+    device_methods = device_file_methods
     # methods = root_methods
     # methods = adb_methods
     methods = device_methods

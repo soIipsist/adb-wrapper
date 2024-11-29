@@ -1,10 +1,8 @@
-from adb.adb import ADB, Device
+from adb.adb import ADB
 import argparse
 import os
-from itertools import zip_longest
 
-"""A script designed to transfer files to from your device to your pc and vice versa."""
-
+"""A script designed to transfer files from your device to your pc and vice versa."""
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
@@ -23,11 +21,19 @@ if __name__ == "__main__":
     adb = ADB()
 
     if device_ip:
-        adb.connect(device_ip, True, False, True)
+        adb.connect(device_ip)
+
     device = adb.get_device()
+    is_push = os.path.exists(source_files[0])  # indicates these are pc files
+
+    # check if destination directory is valid
+    if destination_directory:
+        if is_push:
+            assert device.is_directory(destination_directory)
+        else:
+            assert os.path.isdir(destination_directory)
 
     # get source files first
-
     for idx, source_file in enumerate(source_files):
 
         if os.path.isdir(
@@ -42,27 +48,17 @@ if __name__ == "__main__":
         # likewise, do the same if it's a device file
 
         if device.is_directory(source_file):
-            # check if it's a directory
-            new_source_files = []
+            new_source_files = [
+                os.path.join(source_file, file)
+                for file in device.get_files_in_directory(source_file)
+            ]
+            source_files[idx : idx + 1] = new_source_files
 
-    # for idx, (source_file, destination_file) in enumerate(
-    #     zip_longest(source_files, destination_files)
-    # ):
-    #     print(source_file, destination_file)
-
-    #     if destination_directory:
-    #         base_name = (
-    #             os.path.basename(destination_file)
-    #             if destination_file
-    #             else os.path.basename(source_file)
-    #         )
-    #         os.path.join(destination_directory, base_name)
-
-    # if os.path.exists(
-    #     source_files[0]
-    # ):  # this is a device file, which means you'll transfer from pc to device
-    #     output = device.push_files(source_files, destination_files)
-    # else:
-    #     output = device.pull_files(source_files, destination_files)
-
-    # print(output)
+    if is_push:  # transfer from pc to device
+        output = device.push_files(
+            source_files, destination_files, destination_directory
+        )
+    else:  # transfer from device to pc
+        output = device.pull_files(
+            source_files, destination_files, destination_directory
+        )
