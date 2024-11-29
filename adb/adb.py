@@ -344,9 +344,16 @@ class Device(ADB):
             image_path = "boot.img"
 
         try:
+            print(root_method)
             if self.is_bootloader_locked():
-                print("Your bootloader is locked. Unlock it before proceeding.")
-                return
+                q = input(
+                    "Your bootloader is locked. Would you like to unlock it? (y/n)"
+                )
+                if q == "y":
+                    self.unlock_bootloader()
+                    self.root(root_method, image_path)
+                else:
+                    return
             if root_method == RootMethod.MAGISK:
                 self._root_magisk(image_path)
             elif root_method == RootMethod.APATCH:

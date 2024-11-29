@@ -454,8 +454,8 @@ if __name__ == "__main__":
     root_methods = [
         # TestAdb.test_factory_reset,
         # TestAdb.test_root,
-        # TestAdb.test_unlock_bootloader,
-        # TestAdb.test_is_oem_unlock_supported,
+        TestAdb.test_unlock_bootloader,
+        TestAdb.test_is_oem_unlock_supported,
         # TestAdb.test_fastboot_reboot,
         # TestAdb.test_fastboot_flash_boot,
     ]
@@ -525,8 +525,8 @@ if __name__ == "__main__":
     ]
 
     # device_methods = device_event_methods
-    # methods = root_methods
-    methods = adb_methods
+    methods = root_methods
+    # methods = adb_methods
     # methods = device_methods
     # methods = util_methods
     run_test_methods(methods)
