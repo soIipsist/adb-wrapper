@@ -26,6 +26,12 @@ def command(command: str, logging: bool = True, base_cmd="adb", log_cmd: bool = 
                 raise TypeError("command is not of type string.")
 
             command_args = shlex.split(command)
+
+            supported_commands = ["adb", "fastboot"]
+
+            if base_cmd not in supported_commands:
+                raise ValueError(f"Unsupported command '{base_cmd}'.")
+
             command_args.insert(0, base_cmd)
 
             if isinstance(cls, Device):

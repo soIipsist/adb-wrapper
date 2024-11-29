@@ -42,7 +42,9 @@ def set_path_environment_variable(value: str, set_globally: bool = False):
     if set_globally:
         try:
             if os.name == "nt":
-                subprocess.run(["setx", key, value], check=True)
+                current_path = os.environ.get("PATH", "")
+                updated_path = f"{current_path};{value}"
+                subprocess.run(["setx", "PATH", updated_path], check=True)
             else:
                 # Modify shell configuration files for macOS or Linux
                 home_dir = os.path.expanduser("~")

@@ -98,6 +98,9 @@ class TestAdb(TestBase):
     def test_execute_command(self):
         output = adb.execute("version")
 
+        # raises error if other base cmd
+        adb.execute("--version", base_cmd="fastboot")
+
     # device package methods
     def test_get_packages(self):
         packages = target_device.get_packages()
@@ -368,6 +371,7 @@ class TestAdb(TestBase):
     def test_is_oem_unlock_supported(self):
         is_supported = target_device.is_oem_unlock_supported()
         self.assertTrue(is_supported)
+        print(is_supported)
 
     def test_fastboot_reboot(self):
         target_device.fastboot_reboot()
@@ -438,37 +442,37 @@ class TestAdb(TestBase):
 
 if __name__ == "__main__":
     adb_methods = [
-        TestAdb.test_check_sdk_path,
-        TestAdb.test_get_devices,
-        TestAdb.test_get_device,
-        TestAdb.test_connect,
-        TestAdb.test_disconnect,
+        # TestAdb.test_check_sdk_path,
+        # TestAdb.test_get_devices,
+        # TestAdb.test_get_device,
+        # TestAdb.test_connect,
+        # TestAdb.test_disconnect,
         TestAdb.test_execute_command,
-        TestAdb.test_enable_tcpip_mode,
-        TestAdb.test_enable_usb_mode,
+        # TestAdb.test_enable_tcpip_mode,
+        # TestAdb.test_enable_usb_mode,
     ]
     root_methods = [
         # TestAdb.test_factory_reset,
         # TestAdb.test_root,
         # TestAdb.test_unlock_bootloader,
-        TestAdb.test_is_oem_unlock_supported,
-        TestAdb.test_fastboot_reboot,
+        # TestAdb.test_is_oem_unlock_supported,
+        # TestAdb.test_fastboot_reboot,
         # TestAdb.test_fastboot_flash_boot,
     ]
 
     device_package_methods = [
-        # TestAdb.test_get_system_packages,
-        # TestAdb.test_get_google_packages,
-        # TestAdb.test_get_third_party_packages,
-        # TestAdb.test_get_packages,
-        # TestAdb.test_filter_packages,
+        TestAdb.test_get_system_packages,
+        TestAdb.test_get_google_packages,
+        TestAdb.test_get_third_party_packages,
+        TestAdb.test_get_packages,
+        TestAdb.test_filter_packages,
         TestAdb.test_grant_permissions,
-        # TestAdb.test_revoke_permissions,
-        # TestAdb.test_get_package_path,
-        # TestAdb.test_get_package_name,
-        # TestAdb.test_install_package,
-        # TestAdb.test_uninstall_package,
-        # TestAdb.test_google_debloat,
+        TestAdb.test_revoke_permissions,
+        TestAdb.test_get_package_path,
+        TestAdb.test_get_package_name,
+        TestAdb.test_install_package,
+        TestAdb.test_uninstall_package,
+        TestAdb.test_google_debloat,
     ]
     device_settings_methods = [
         TestAdb.test_get_ip,
@@ -492,7 +496,7 @@ if __name__ == "__main__":
     ]
 
     device_backup_methods = [
-        # TestAdb.test_backup,
+        TestAdb.test_backup,
         TestAdb.test_restore,
     ]
     device_file_methods = [
@@ -520,9 +524,9 @@ if __name__ == "__main__":
         TestAdb.test_make_executable,
     ]
 
-    device_methods = device_backup_methods
+    # device_methods = device_event_methods
     # methods = root_methods
-    # methods = adb_methods
-    methods = device_methods
+    methods = adb_methods
+    # methods = device_methods
     # methods = util_methods
     run_test_methods(methods)

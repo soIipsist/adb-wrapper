@@ -24,6 +24,10 @@ if __name__ == "__main__":
         adb.connect(device_ip)
 
     device = adb.get_device()
+
+    if not device:
+        raise ValueError("Device not found. Please connect your device via adb.")
+
     is_push = os.path.exists(source_files[0])  # indicates these are pc files
 
     # check if destination directory is valid

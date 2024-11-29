@@ -12,9 +12,6 @@ devices = adb.get_devices()
 # execute adb command
 output = adb.execute("devices -l")
 
-# which is the same as executing
-output = adb.execute(["devices", "-l"])
-
 # get google packages
 packages = adb.get_google_packages()
 
