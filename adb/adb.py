@@ -667,9 +667,15 @@ class Device(ADB):
     def set_home_app(self, package):
         return self.output
 
-    @command("restore")
-    def restore(self, backup_file):
-        return self.output
+    def restore(self, backup_file: str):
+        print(f"Restoring backup from {backup_file}...")
+
+        if not os.path.exists(backup_file):
+            raise FileNotFoundError("Backup file not found.")
+
+        if not backup_file.endswith(".ab"):
+            raise FileNotFoundError("Backup files must be of .ab type.")
+        return self.execute(f"restore {backup_file}")
 
     @command("push")
     def push_file(self, pc_file, device_file):
@@ -787,9 +793,9 @@ class Device(ADB):
 
     def backup(
         self,
-        shared_storage=False,
-        apks=False,
-        system=False,
+        shared_storage=True,
+        apks=True,
+        system=True,
         destination_path: str = None,
     ):
         cmd = ["backup", "-all"]
@@ -805,19 +811,13 @@ class Device(ADB):
 
         if destination_path:
             cmd.append("-f")
-            # check if valid directory
-            directory = os.path.dirname(destination_path)
-            file_name = os.path.basename(destination_path)
-            print(directory, file_name)
 
-            if not os.path.isdir(directory):
-                raise FileNotFoundError("Directory not valid")
-
-            if not file_name.endswith(".ab"):
+            if not destination_path.endswith(".ab"):
                 raise FileNotFoundError("Backup files must be of .ab type.")
             cmd.append(destination_path)
 
         cmd = " ".join(cmd)
+        print("Performing backup...")
         self.execute(cmd)
         return self.output
 

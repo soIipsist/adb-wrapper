@@ -281,6 +281,7 @@ class TestAdb(TestBase):
         shared_storage = False
         apks = False
         system = False
+        # destination_path = "/Users/p/Desktop/backup.ab"
         destination_path = None
         output = target_device.backup(shared_storage, apks, system, destination_path)
 
@@ -452,7 +453,7 @@ if __name__ == "__main__":
         # TestAdb.test_unlock_bootloader,
         TestAdb.test_is_oem_unlock_supported,
         TestAdb.test_fastboot_reboot,
-        TestAdb.test_fastboot_flash_boot,
+        # TestAdb.test_fastboot_flash_boot,
     ]
 
     device_package_methods = [
@@ -491,19 +492,20 @@ if __name__ == "__main__":
     ]
 
     device_backup_methods = [
-        TestAdb.test_backup,
+        # TestAdb.test_backup,
         TestAdb.test_restore,
     ]
     device_file_methods = [
-        # TestAdb.test_file_exists,
-        # TestAdb.test_get_current_working_directory,
+        TestAdb.test_file_exists,
+        TestAdb.test_get_current_working_directory,
         TestAdb.test_get_default_download_directory,
-        # TestAdb.test_is_valid_path,
-        # TestAdb.test_push_file,
-        # TestAdb.test_push_files,
-        # TestAdb.test_pull_files,
-        # TestAdb.test_pull_file,
+        TestAdb.test_is_valid_path,
+        TestAdb.test_push_file,
+        TestAdb.test_push_files,
+        TestAdb.test_pull_files,
+        TestAdb.test_pull_file,
     ]
+
     device_event_methods = [
         TestAdb.test_execute_touch_event,
         TestAdb.test_expand_notifications,
@@ -518,7 +520,7 @@ if __name__ == "__main__":
         TestAdb.test_make_executable,
     ]
 
-    device_methods = device_file_methods
+    device_methods = device_backup_methods
     # methods = root_methods
     # methods = adb_methods
     methods = device_methods
