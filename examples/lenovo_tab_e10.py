@@ -1,4 +1,4 @@
-from adb.adb import ADB, Device
+from src.adb import ADB, Device
 import argparse
 import os
 

@@ -1,6 +1,6 @@
 from pprint import PrettyPrinter
 import shutil
-from adb.utils import (
+from src.utils import (
     load_env,
     download_file_from_link,
     download_sdk_platform_tools,
@@ -9,7 +9,7 @@ from adb.utils import (
     find_variable_in_path,
 )
 from test_base import TestBase, run_test_methods
-from adb.adb import (
+from src.adb import (
     ADB,
     Device,
     Package,
@@ -454,9 +454,9 @@ if __name__ == "__main__":
     root_methods = [
         # TestAdb.test_factory_reset,
         # TestAdb.test_root,
-        TestAdb.test_unlock_bootloader,
-        TestAdb.test_is_oem_unlock_supported,
-        # TestAdb.test_fastboot_reboot,
+        # TestAdb.test_unlock_bootloader,
+        # TestAdb.test_is_oem_unlock_supported,
+        TestAdb.test_fastboot_reboot,
         # TestAdb.test_fastboot_flash_boot,
     ]
 

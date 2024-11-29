@@ -1,4 +1,4 @@
-from adb.adb import ADB, RootMethod
+from src.adb import ADB, RootMethod  # change this to from adb_wrapper.adb
 from argparse import ArgumentParser
 
 """ An example script that roots your connected devices."""

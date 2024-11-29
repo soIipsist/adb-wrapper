@@ -1,6 +1,6 @@
 # adb-wrapper
 
-A Python ADB wrapper for executing commands on multiple devices. This tool can be used to uninstall pre-installed Google Play Store packages, store device settings, modify package permissions, backup devices and install APK files.
+A Python ADB wrapper for executing commands on multiple devices. This tool can be used to uninstall pre-installed Google Play Store packages, adjust device settings and package permissions, back up data, install APK files, and perform rooting operations.
 
 ## Prerequisites
 
@@ -38,7 +38,7 @@ git clone https://github.com/soIipsist/adb-wrapper@main
 ### Example
 
 ```Python
-from adb.adb import ADB, Device
+from adb_wrapper import ADB, Device
 
 adb = ADB()
 devices = adb.get_devices()
