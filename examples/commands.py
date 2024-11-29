@@ -1,4 +1,8 @@
-from src.adb import ADB, Device, RootMethod  # change this to from adb_wrapper.adb
+from adb_wrapper.adb import (
+    ADB,
+    Device,
+    RootMethod,
+)
 
 apk_dirs = ["C:/Desktop/apk.apk", "C:/Desktop/package.apk"]
 packages = ["com.example.package", "com.example.package2"]

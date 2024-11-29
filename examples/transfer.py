@@ -1,4 +1,4 @@
-from src.adb import ADB  # change this to from adb_wrapper.adb
+from adb_wrapper.adb import ADB  # change this to from adb_wrapper.adb
 import argparse
 import os
 

@@ -1,6 +1,6 @@
 from pprint import PrettyPrinter
 import shutil
-from src.utils import (
+from adb_wrapper.utils import (
     load_env,
     download_file_from_link,
     download_sdk_platform_tools,
@@ -9,7 +9,7 @@ from src.utils import (
     find_variable_in_path,
 )
 from test_base import TestBase, run_test_methods
-from src.adb import (
+from adb_wrapper.adb import (
     ADB,
     Device,
     Package,
