@@ -1,1 +1,5 @@
-include *.json
+include adb_wrapper/*.json
+exclude tests/*
+exclude tests
+exclude examples/*
+exclude examples
