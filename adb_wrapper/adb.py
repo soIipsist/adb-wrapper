@@ -706,6 +706,11 @@ class Device(ADB):
     def get_current_working_directory(self):
         return self.output
 
+    @command("shell mkdir")
+    def create_directory(self, directory):
+        print(f"Created directory {directory}.")
+        return self.output
+
     def get_default_download_directory(self):
         default_download_directory = "/storage/emulated/0/Download"
         output = self.execute(f"shell ls {default_download_directory}", logging=False)
