@@ -52,7 +52,7 @@ if __name__ == "__main__":
                     rel_root = os.path.relpath(root, os.path.dirname(base_dir))
                     device_dir = os.path.join(destination_directory, rel_root)
                     device.create_directory(
-                        device_dir
+                        quote(device_dir)
                     )  # create each directory on device
 
                     for file in files:
