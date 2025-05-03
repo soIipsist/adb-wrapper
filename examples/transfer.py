@@ -9,7 +9,7 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser()
 
     parser.add_argument("source_files", nargs="+", type=str)
-    parser.add_argument("--destination_directory", type=str, default=None)
+    parser.add_argument("--destination_directory", type=str, default="/sdcard/Download")
     parser.add_argument("-i", "--device_ip", type=str, default=None)
 
     args = vars(parser.parse_args())
@@ -30,6 +30,9 @@ if __name__ == "__main__":
     is_push = os.path.exists(source_files[0])  # indicates these are pc files
 
     # check if destination directory is valid
+    if destination_directory is None:
+        raise ValueError("Destination directory must be given.")
+
     if destination_directory:
         if is_push:
             assert device.is_directory(destination_directory)
