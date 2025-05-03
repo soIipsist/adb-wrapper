@@ -41,69 +41,35 @@ if __name__ == "__main__":
 
     idx = 0
     while idx < len(source_files):
+
         try:
             source_file = source_files[idx]
+            source_file = quote(source_file)
 
-            # Local PC directory
             if os.path.isdir(source_file):
-                base_dir = source_file
-                new_source_files = []
-                for root, dirs, files in os.walk(base_dir):
-                    rel_root = os.path.relpath(root, os.path.dirname(base_dir))
-                    device_dir = os.path.join(destination_directory, rel_root)
-                    device.create_directory(
-                        quote(device_dir)
-                    )  # create each directory on device
-
-                    for file in files:
-                        full_path = os.path.join(root, file)
-                        rel_file_path = os.path.join(rel_root, file)
-                        new_source_files.append(
-                            (full_path, rel_file_path)
-                        )  # tuple of source and relative path
-
+                new_source_files = [
+                    entry.path for entry in os.scandir(source_file) if entry.is_file()
+                ]
                 source_files[idx : idx + 1] = new_source_files
 
-            # Remote device directory
             elif device.is_directory(source_file):
-                base_dir = source_file
-                new_source_files = []
-
-                def walk_device_dir(path, root_path):
-                    entries = device.get_files_in_directory(path)
-                    for entry in entries:
-                        full_path = os.path.join(path, entry)
-                        if device.is_directory(full_path):
-                            rel_dir = os.path.relpath(full_path, root_path)
-                            local_dir = os.path.join(destination_directory, rel_dir)
-                            os.makedirs(local_dir, exist_ok=True)
-                            walk_device_dir(full_path, root_path)
-                        else:
-                            rel_file_path = os.path.relpath(full_path, root_path)
-                            new_source_files.append((full_path, rel_file_path))
-
-                walk_device_dir(base_dir, base_dir)
+                new_source_files = [
+                    os.path.join(source_file, file)
+                    for file in device.get_files_in_directory(source_file)
+                ]
                 source_files[idx : idx + 1] = new_source_files
 
-            # File (push/pull)
             else:
-                if isinstance(source_file, tuple):
-                    src_path, rel_path = source_file
-                    dest_file = os.path.join(destination_directory, rel_path)
-                    os.makedirs(os.path.dirname(dest_file), exist_ok=True)
-                else:
-                    src_path = source_file
-                    dest_file = os.path.join(
-                        destination_directory, os.path.basename(src_path)
-                    )
+                dest_file = os.path.join(
+                    destination_directory, os.path.basename(source_file)
+                )
 
-                if is_push:
-                    output = device.push_file(src_path, dest_file)
-                else:
-                    output = device.pull_file(src_path, dest_file)
+                if is_push:  # transfer from pc to device
+                    output = device.push_file(source_file, dest_file)
+                else:  # transfer from device to pc
+                    output = device.pull_file(source_file, dest_file)
 
                 idx += 1
-
         except Exception as e:
             print("Exception:", e)
             idx += 1
