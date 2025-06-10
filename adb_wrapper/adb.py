@@ -723,7 +723,12 @@ class Device(ADB):
 
     @command("shell ls -p", logging=False)
     def get_files_in_directory(self, path):
-        return [o for o in self.output.splitlines() if not o.endswith("/")]
+        return [o.strip() for o in self.output.splitlines() if not o.endswith("/")]
+
+    @command("shell find {path} -type f", logging=False)
+    def get_all_files_in_directory(self, path):
+        files = [line.strip() for line in self.output.splitlines() if line.strip()]
+        return files
 
     @command("shell test -d", logging=False)
     def is_directory(self, path):
