@@ -722,12 +722,20 @@ class Device(ADB):
         return not bool(self.return_code)
 
     @command("shell ls -p", logging=False)
-    def get_files_in_directory(self, path):
-        return [o.strip() for o in self.output.splitlines() if not o.endswith("/")]
+    def get_files_in_directory(self, directory):
+        return [
+            os.path.join(directory, o.strip())
+            for o in self.output.splitlines()
+            if not o.endswith("/")
+        ]
 
     @command("shell find {path} -type f", logging=False)
-    def get_all_files_in_directory(self, path):
-        files = [line.strip() for line in self.output.splitlines() if line.strip()]
+    def get_all_files_in_directory(self, directory):
+        files = [
+            os.path.join(directory, line.strip())
+            for line in self.output.splitlines()
+            if line.strip()
+        ]
         return files
 
     @command("shell test -d", logging=False)
@@ -749,12 +757,15 @@ class Device(ADB):
             destination_directory = self.get_default_download_directory()
 
         for pc_file, device_file in zip_longest(pc_files, device_files):
-            if device_file is None:
-                device_file = os.path.join(
-                    destination_directory, os.path.basename(pc_file)
-                )
+            try:
+                if device_file is None:
+                    device_file = os.path.join(
+                        destination_directory, os.path.basename(pc_file)
+                    )
 
-            self.push_file(pc_file, device_file)
+                self.push_file(pc_file, device_file)
+            except Exception as e:
+                print(e)
 
         return self.output
 
@@ -772,11 +783,15 @@ class Device(ADB):
             destination_directory = os.getcwd()
 
         for device_file, pc_file in zip_longest(device_files, pc_files):
-            if pc_file is None:
-                pc_file = os.path.join(
-                    destination_directory, os.path.basename(device_file)
-                )
-            self.pull_file(device_file, pc_file)
+            try:
+                if pc_file is None:
+                    pc_file = os.path.join(
+                        destination_directory, os.path.basename(device_file)
+                    )
+                self.pull_file(device_file, pc_file)
+            except Exception as e:
+                print(e)
+
         return self.output
 
     @command("shell test -f")
