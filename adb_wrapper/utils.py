@@ -43,6 +43,7 @@ def set_path_environment_variable(value: str, set_globally: bool = False):
     if set_globally:
         try:
             if os.name == "nt":
+                print("Setting globally.")
                 current_path = os.environ.get("PATH", "")
                 updated_path = f"{current_path};{value}"
                 subprocess.run(["setx", "PATH", updated_path], check=True)
@@ -246,7 +247,7 @@ def check_sdk_path():
             if not sdk_path:
                 raise RuntimeError("Failed to download SDK platform-tools.")
 
-            set_path_environment_variable(sdk_path, True)
+            set_path_environment_variable(sdk_path, False)
 
             # grant permissions to adb and fastboot
             adb_path = os.path.join(sdk_path, "adb")
