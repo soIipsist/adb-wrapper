@@ -1,3 +1,4 @@
+from pprint import PrettyPrinter
 import sys
 from pathlib import Path
 
@@ -50,7 +51,7 @@ if __name__ == "__main__":
     destination_directory = args.get("destination_directory")
     nested_files = args.get("nested_files")
 
-    print(args)
+    # print(args)
     adb = ADB()
     device = adb.get_device()
 
@@ -71,4 +72,5 @@ if __name__ == "__main__":
         )
         device.pull_files(source_files, destination_directory=destination_directory)
 
-    print("Source files: ", source_files)
+    pp = PrettyPrinter(indent=2)
+    pp.pprint("Source files: ", source_files)
