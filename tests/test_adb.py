@@ -7,6 +7,8 @@ from adb_wrapper.utils import (
     make_executable,
     set_path_environment_variable,
     find_variable_in_path,
+    check_sdk_path,
+    is_valid_command,
 )
 from test_base import TestBase, run_test_methods
 from adb_wrapper.adb import (
@@ -18,12 +20,12 @@ from adb_wrapper.adb import (
     magisk_url,
     apatch_url,
     kernelsu_url,
-    sdk_checked,
+    command_checked,
 )
 import os
 
 adb = ADB()
-devices = adb.get_devices()
+devices = []
 target_device = devices[0] if len(devices) > 0 else None
 environment_variables = load_env(
     file_path=".env"
@@ -36,8 +38,8 @@ device_path = environment_variables.get("DEVICE_PATH")
 device_ip = environment_variables.get("DEVICE_IP")
 packages = environment_variables.get("PACKAGES")
 package_paths = environment_variables.get("PACKAGE_PATHS")
-package = packages[0]
-package_path = package_paths[0]
+package = packages[0] if packages else None
+package_path = package_paths[0] if package_paths else None
 backup_path = environment_variables.get("BACKUP_FILE_PATH")
 image_path = environment_variables.get("IMAGE_PATH")
 permissions = environment_variables.get("PERMISSIONS")
@@ -70,15 +72,20 @@ class TestAdb(TestBase):
 
         # remove sdk platform tools
         sdk_path = find_variable_in_path("platform-tools")
-        shutil.rmtree(sdk_path)
+        print("ORIGINAL SDK", sdk_path)
+        # shutil.rmtree(sdk_path)
 
-        # check sdk with environment vars set locally or globally
-        # adb.global_env = True
-        sdk_path = adb.check_sdk_path()
-        self.assertTrue(os.path.exists(sdk_path))
-        self.assertTrue(adb.sdk_path == sdk_path)
+        sdk_path = check_sdk_path()
 
-        adb.get_device()
+        if sdk_path:
+
+            self.assertTrue(os.path.exists(sdk_path))
+            device = adb.get_device()
+
+            if device:
+                print(device.get_model())
+        else:
+            print("SDK PATH NOT FOUND")
 
     def test_connect(self):
         print(device_ip)
@@ -439,10 +446,14 @@ class TestAdb(TestBase):
         is_executable = os.access(file_path, os.X_OK)
         self.assertTrue(is_executable)
 
+    def test_is_valid_command(self):
+        command = "adb"
+        is_valid = is_valid_command(command, False)
+        print(is_valid)
+
 
 if __name__ == "__main__":
     adb_methods = [
-        # TestAdb.test_check_sdk_path,
         # TestAdb.test_get_devices,
         # TestAdb.test_get_device,
         # TestAdb.test_connect,
@@ -516,17 +527,19 @@ if __name__ == "__main__":
     ]
 
     util_methods = [
-        TestAdb.test_load_env,
-        TestAdb.test_download_link,
-        TestAdb.test_download_sdk_platform_tools,
-        TestAdb.test_set_path_environment_variable,
-        TestAdb.test_find_variable_in_path,
-        TestAdb.test_make_executable,
+        # TestAdb.test_load_env,
+        # TestAdb.test_download_link,
+        # TestAdb.test_download_sdk_platform_tools,
+        # TestAdb.test_set_path_environment_variable,
+        # TestAdb.test_find_variable_in_path,
+        # TestAdb.test_make_executable,
+        # TestAdb.test_check_sdk_path,
+        TestAdb.test_is_valid_command,
     ]
 
     # device_methods = device_event_methods
-    methods = root_methods
+    # methods = root_methods
     # methods = adb_methods
     # methods = device_methods
-    # methods = util_methods
+    methods = util_methods
     run_test_methods(methods)

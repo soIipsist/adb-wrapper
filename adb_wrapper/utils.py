@@ -1,5 +1,6 @@
 import mimetypes
 import os
+from pathlib import Path
 import shutil
 import platform
 import subprocess
@@ -130,8 +131,22 @@ def load_env(file_path=".env"):
 
 def make_executable(file_path):
     try:
-        os.chmod(file_path, 0o755)
-        print(f"{file_path} is now executable.")
+        system = platform.system()
+
+        # Adjust for .exe extension on Windows
+        if system == "Windows" and not os.path.exists(file_path):
+            file_path += ".exe"
+
+        if not os.path.exists(file_path):
+            print(f"File not found: {file_path}")
+            return
+
+        # Make file executable only on Unix-like systems
+        if system != "Windows":
+            os.chmod(file_path, 0o755)
+            print(f"{file_path} is now executable.")
+        else:
+            pass
     except Exception as e:
         print(f"Error making {file_path} executable: {e}")
 
@@ -164,7 +179,14 @@ def download_file_from_link(download_link, output_path=None):
         print(f"File downloaded at: {output_path}")
 
         mime_type, _ = mimetypes.guess_type(output_path)
-        if mime_type in ["application/zip", "application/x-tar", "application/gzip"]:
+        # print("MIME", mime_type, output_path)
+
+        if mime_type in [
+            "application/zip",
+            "application/x-tar",
+            "application/gzip",
+        ] or output_path.endswith(".zip"):
+
             print("Extracting the archive...")
             extracted_dir = os.path.join(
                 output_directory, os.path.splitext(os.path.basename(output_path))[0]
@@ -189,3 +211,61 @@ def download_file_from_link(download_link, output_path=None):
     except Exception as e:
         print(f"An error occurred while downloading or extracting the file: {e}")
         return None
+
+
+def check_sdk_path():
+    """
+    Checks if 'platform-tools' exists in the PATH environment variable.
+    Prompts the user to download it if not found and returns the platform-tools directory.
+    """
+
+    sdk_path = find_variable_in_path("platform-tools")
+
+    if not sdk_path or not os.path.exists(
+        sdk_path
+    ):  # download sdk platform tools, if adb doesn't exist in PATH
+        user_input = (
+            input(
+                "ADB was not found in your PATH environment variable. "
+                "Would you like to download the latest version of SDK platform-tools? (y/n): "
+            )
+            .strip()
+            .lower()
+        )
+
+        if user_input == "y":
+
+            default_dir = Path.home()
+            download_dir = input(
+                f"Enter the directory where platform-tools should be downloaded (default: {default_dir}): "
+            ).strip()
+            download_dir = Path(download_dir).resolve() if download_dir else default_dir
+
+            sdk_path = download_sdk_platform_tools(download_dir)
+
+            if not sdk_path:
+                raise RuntimeError("Failed to download SDK platform-tools.")
+
+            set_path_environment_variable(sdk_path, True)
+
+            # grant permissions to adb and fastboot
+            adb_path = os.path.join(sdk_path, "adb")
+            fastboot_path = os.path.join(sdk_path, "fastboot")
+            make_executable(adb_path)
+            make_executable(fastboot_path)
+            return str(sdk_path)
+
+    return sdk_path
+
+
+def is_valid_command(base_cmd, command_checked: bool):
+    if base_cmd not in {"adb", "fastboot"}:
+        raise ValueError(f"Unsupported command '{base_cmd}'.")
+
+    sdk_path = None
+
+    if not command_checked:
+        sdk_path = check_sdk_path()
+        command_checked = shutil.which(base_cmd) is not None
+
+    return command_checked, sdk_path

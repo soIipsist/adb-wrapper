@@ -11,26 +11,22 @@ from functools import wraps
 from importlib import resources
 import json
 
-sdk_checked: bool = False
+command_checked: bool = False
 
 
 def command(command: str, logging: bool = True, base_cmd="adb", log_cmd: bool = False):
     def decorator(func):
         @wraps(func)
         def wrapper(cls, *args, **kwargs):
-            global sdk_checked
-            if not sdk_checked and isinstance(cls, ADB):
-                cls.check_sdk_path()
+            if not isinstance(cls, ADB):
+                raise TypeError("invalid command.")
 
             if not isinstance(command, str):
                 raise TypeError("command is not of type string.")
 
             command_args = shlex.split(command)
-
-            supported_commands = ["adb", "fastboot"]
-
-            if base_cmd not in supported_commands:
-                raise ValueError(f"Unsupported command '{base_cmd}'.")
+            global command_checked
+            command_checked, sdk_path = is_valid_command(base_cmd, command_checked)
 
             command_args.insert(0, base_cmd)
 
@@ -157,74 +153,10 @@ class Package:
 class ADB:
     return_code = None
     output: str = None
-    sdk_path = None
     google_packages: list = []
-    _global_env: bool = False
 
-    def __init__(self, global_env: bool = False) -> None:
-        self.global_env = global_env
-
-    @property
-    def global_env(self):
-        return self._global_env
-
-    @global_env.setter
-    def global_env(self, global_env: bool):
-        self._global_env = global_env
-
-    def check_sdk_path(self):
-        """
-        Checks if 'platform-tools' exists in the PATH environment variable.
-        Prompts the user to download it if not found and returns the platform-tools directory.
-        """
-
-        sdk_path = find_variable_in_path("platform-tools")
-
-        if not sdk_path or not os.path.exists(
-            sdk_path
-        ):  # download sdk platform tools, if adb doesn't exist in PATH
-            user_input = (
-                input(
-                    "ADB was not found in your PATH environment variable. "
-                    "Would you like to download the latest version of SDK platform-tools? (y/n): "
-                )
-                .strip()
-                .lower()
-            )
-
-            if user_input == "y":
-
-                default_dir = Path.home()
-                download_dir = input(
-                    f"Enter the directory where platform-tools should be downloaded (default: {default_dir}): "
-                ).strip()
-                download_dir = (
-                    Path(download_dir).resolve() if download_dir else default_dir
-                )
-
-                sdk_path = download_sdk_platform_tools(download_dir)
-
-                if not sdk_path:
-                    raise RuntimeError("Failed to download SDK platform-tools.")
-
-                set_path_environment_variable(sdk_path, self.global_env)
-
-                # grant permissions to adb and fastboot
-                adb_path = os.path.join(sdk_path, "adb")
-                fastboot_path = os.path.join(sdk_path, "fastboot")
-                make_executable(adb_path)
-                make_executable(fastboot_path)
-                self.sdk_path = sdk_path
-                return str(sdk_path)
-            else:
-                raise FileNotFoundError(
-                    "ADB commands cannot be executed because platform-tools was not found."
-                )
-
-        self.sdk_path = sdk_path
-        global sdk_checked
-        sdk_checked = True
-        return sdk_path
+    def __init__(self) -> None:
+        pass
 
     def get_google_packages(self):
         packages = []
