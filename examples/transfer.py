@@ -73,4 +73,5 @@ if __name__ == "__main__":
         device.pull_files(source_files, destination_directory=destination_directory)
 
     pp = PrettyPrinter(indent=2)
-    pp.pprint("Source files: ", source_files)
+    print(f"Source files ({len(source_files)}):")
+    pp.pprint(source_files)
