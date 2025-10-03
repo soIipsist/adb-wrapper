@@ -25,7 +25,7 @@ from adb_wrapper.adb import (
 import os
 
 adb = ADB()
-devices = []
+devices = adb.get_devices()
 target_device = devices[0] if len(devices) > 0 else None
 environment_variables = load_env(
     file_path=".env"
@@ -451,6 +451,11 @@ class TestAdb(TestBase):
         is_valid = is_valid_command(command, False)
         print(is_valid)
 
+    # shell su methods
+    def test_is_rooted(self):
+        output = target_device.is_rooted()
+        print(output)
+
 
 if __name__ == "__main__":
     adb_methods = [
@@ -526,6 +531,8 @@ if __name__ == "__main__":
         TestAdb.test_expand_notifications,
     ]
 
+    device_su_methods = [TestAdb.test_is_rooted]
+
     util_methods = [
         # TestAdb.test_load_env,
         # TestAdb.test_download_link,
@@ -534,12 +541,11 @@ if __name__ == "__main__":
         # TestAdb.test_find_variable_in_path,
         # TestAdb.test_make_executable,
         # TestAdb.test_check_sdk_path,
-        TestAdb.test_is_valid_command,
+        # TestAdb.test_is_valid_command,
     ]
 
-    # device_methods = device_event_methods
     # methods = root_methods
     # methods = adb_methods
-    # methods = device_methods
-    methods = util_methods
+    methods = device_su_methods
+    # methods = util_methods
     run_test_methods(methods)

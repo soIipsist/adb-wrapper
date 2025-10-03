@@ -14,26 +14,27 @@ import json
 command_checked: bool = False
 
 
-def command(command: str, logging: bool = True, base_cmd="adb", log_cmd: bool = False):
+def _command_decorator(base_cmd, command, logging=True, log_cmd=False, root=False):
     def decorator(func):
         @wraps(func)
         def wrapper(cls, *args, **kwargs):
-            if not isinstance(cls, ADB):
-                raise TypeError("invalid command.")
-
             if not isinstance(command, str):
                 raise TypeError("command is not of type string.")
 
-            command_args = shlex.split(command)
             global command_checked
             command_checked, sdk_path = is_valid_command(base_cmd, command_checked)
 
-            command_args.insert(0, base_cmd)
+            command_args = [base_cmd]
 
             if isinstance(cls, Device):
                 device_id = getattr(cls, "id")
-                command_args.insert(1, "-s")
-                command_args.insert(2, device_id)
+                command_args.extend(["-s", device_id])
+
+            # checks if root
+            if root:
+                command_args.extend(["shell", "su", "-c", command])
+            else:
+                command_args.extend(shlex.split(command))
 
             if args:
                 args = [str(arg) for arg in args if arg is not None]
@@ -70,6 +71,20 @@ def command(command: str, logging: bool = True, base_cmd="adb", log_cmd: bool = 
         return wrapper
 
     return decorator
+
+
+def command(command: str, logging: bool = True, base_cmd="adb", log_cmd: bool = False):
+    return _command_decorator(
+        base_cmd, command, logging=logging, log_cmd=log_cmd, root=False
+    )
+
+
+def root_command(
+    command: str, logging: bool = True, base_cmd="adb", log_cmd: bool = False
+):
+    return _command_decorator(
+        base_cmd, command, logging=logging, log_cmd=log_cmd, root=True
+    )
 
 
 class PackageType(str, Enum):
@@ -235,12 +250,14 @@ class ADB:
         logging: bool = True,
         base_cmd: str = "adb",
         log_cmd: bool = False,
+        root: bool = False,
     ):
         """
         Executes an adb command and returns its output.
         """
+        decorator = root_command if root else command
 
-        @command(command_args, logging, base_cmd, log_cmd)
+        @decorator(command_args, logging, base_cmd, log_cmd)
         def run_command(cls):
             return cls.output
 
@@ -382,6 +399,10 @@ class Device(ADB):
 
     def get_sdk(self):
         return self.get_shell_property("ro.build.version.sdk")
+
+    def is_rooted(self):
+        self.output = self.execute("shell su -c id", logging=False)
+        return "uid=0" in self.output
 
     def get_package_path(self, package):
         if isinstance(package, Package):
