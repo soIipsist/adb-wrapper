@@ -168,6 +168,8 @@ class Package:
         packages: List[Union[str, "Package"]],
         do_not_delete_packages: List[Union[str, "Package"]],
     ) -> List["Package"]:
+        """Returns safe to delete packages."""
+
         def to_package(p):
             return p if isinstance(p, Package) else Package(p)
 
@@ -187,20 +189,6 @@ class ADB:
 
     def __init__(self) -> None:
         pass
-
-    def get_google_packages(self):
-        packages = []
-
-        with resources.open_text(__package__, "google.json") as file:
-            packages = json.load(file)
-
-            for idx, package in enumerate(packages):
-                package: dict
-                package = Package(**package, package_type=PackageType.GOOGLE)
-                packages[idx] = package
-
-        self.google_packages = packages
-        return packages
 
     def enable_tcpip_mode(self, port=None):
         if port is None:
@@ -435,19 +423,14 @@ class Device(ADB):
         return package
 
     def get_package_name(self, package):
-        if isinstance(package, Package):
-            package = (
-                package.package_name
-                if package.package_name is not None
-                else package.package_path
-            )
 
-        if package.endswith(".apk"):
-            filtered = Package.filter_packages(
-                self.get_packages(), package_path=package
-            )
-            if filtered:
-                package = filtered.package_name
+        if isinstance(package, Package):
+            package = package.package_name or package.package_path
+
+        if isinstance(package, str) and package.endswith(".apk"):
+            matched = Package.filter_packages(self.get_packages(), package_path=package)
+            if matched:
+                package = matched.package_name
 
         return package
 
@@ -584,6 +567,20 @@ class Device(ADB):
     )
     def get_third_party_packages(self):
         return self.parse_packages(self.output)
+
+    def get_google_packages(self):
+        packages = []
+
+        with resources.open_text(__package__, "google.json") as file:
+            packages = json.load(file)
+
+            for idx, package in enumerate(packages):
+                package: dict
+                package = Package(**package, package_type=PackageType.GOOGLE)
+                packages[idx] = package
+
+        self.google_packages = packages
+        return packages
 
     def install_package(self, package):
         package_path = self.get_package_path(package)
