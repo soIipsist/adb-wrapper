@@ -5,7 +5,7 @@ import re
 import subprocess
 import shlex
 import os
-from typing import List
+from typing import List, Union
 from .utils import *
 from functools import wraps
 from importlib import resources
@@ -163,6 +163,21 @@ class Package:
 
         packages = [package for package in packages if matches(package)]
         return packages[0] if len(packages) == 1 else packages
+
+    def normalize_packages(
+        packages: List[Union[str, "Package"]],
+        do_not_delete_packages: List[Union[str, "Package"]],
+    ) -> List["Package"]:
+        def to_package(p):
+            return p if isinstance(p, Package) else Package(p)
+
+        do_not_delete_packages = [to_package(p) for p in do_not_delete_packages]
+
+        return [
+            pkg
+            for pkg in (to_package(p) for p in packages)
+            if pkg not in do_not_delete_packages
+        ]
 
 
 class ADB:
@@ -761,11 +776,7 @@ class Device(ADB):
             self.install_package(p)
 
     def uninstall_packages(self, packages: List[str]):
-        packages = [
-            package.package_name if isinstance(package, Package) else package
-            for package in packages
-            if package not in self.do_not_delete_packages
-        ]
+        packages = Package.normalize_packages(packages, self.do_not_delete_packages)
         for p in packages:
             self.uninstall_package(p)
 

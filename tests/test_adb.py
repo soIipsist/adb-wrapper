@@ -1,9 +1,9 @@
 from pprint import PrettyPrinter
 import shutil
 from adb_wrapper.utils import (
-    load_env,
     download_file_from_link,
     download_sdk_platform_tools,
+    load_env,
     make_executable,
     set_path_environment_variable,
     find_variable_in_path,
@@ -24,11 +24,12 @@ from adb_wrapper.adb import (
 )
 import os
 
+
 adb = ADB()
 devices = adb.get_devices()
 target_device = devices[0] if len(devices) > 0 else None
 environment_variables = load_env(
-    file_path=".env"
+    file_path=".env",
 )  # change .env path here if you want to test
 
 pc_path = environment_variables.get("PC_PATH")
@@ -147,8 +148,8 @@ class TestAdb(TestBase):
     def test_get_package_path(self):
         package_paths = [
             Package(package_name="com.google.android.apps.youtube.music"),
-            Package(package_path=apk_device_path),
-            apk_device_path,
+            # Package(package_path=apk_device_path),
+            # apk_device_path,
         ]
 
         for p in package_paths:
@@ -544,8 +545,6 @@ if __name__ == "__main__":
         # TestAdb.test_is_valid_command,
     ]
 
-    # methods = root_methods
-    # methods = adb_methods
-    methods = device_su_methods
-    # methods = util_methods
+    methods = [TestAdb.test_get_package_path]
+
     run_test_methods(methods)

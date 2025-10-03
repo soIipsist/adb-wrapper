@@ -104,10 +104,11 @@ def load_env(file_path=".env"):
     Load environment variables from a .env file into the process environment.
     Also supports arrays if values are comma-separated.
     """
-    if not os.path.exists(file_path):
-        raise FileNotFoundError(f"The .env file at {file_path} was not found.")
-
     env_vars = {}
+
+    if not os.path.exists(file_path):
+        print(f"The .env file at {file_path} was not found.")
+        return env_vars
 
     with open(file_path, "r") as file:
         for line in file:
