@@ -10,6 +10,7 @@ from .utils import *
 from functools import wraps
 from importlib import resources
 import json
+import urllib.request
 
 command_checked: bool = False
 

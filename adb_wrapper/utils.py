@@ -1,3 +1,4 @@
+import json
 import mimetypes
 import os
 from pathlib import Path
@@ -271,3 +272,22 @@ def is_valid_command(base_cmd, command_checked: bool):
         command_checked = shutil.which(base_cmd) is not None
 
     return command_checked, sdk_path
+
+
+def get_magisk_url():
+    api_url = "https://api.github.com/repos/topjohnwu/Magisk/releases/latest"
+
+    request = urllib.request.Request(api_url)
+    with urllib.request.urlopen(request, timeout=10) as response:
+        data = json.load(response)
+        assets = data.get("assets", [])
+
+        for asset in assets:
+            name = asset.get("name", "")
+            url = asset.get("browser_download_url", "")
+            if name.lower().endswith(".apk") and url:
+                return url
+
+    return (
+        "https://github.com/topjohnwu/Magisk/releases/download/v29.0/Magisk-v29.0.apk"
+    )

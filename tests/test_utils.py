@@ -9,6 +9,7 @@ from adb_wrapper.utils import (
     find_variable_in_path,
     check_sdk_path,
     is_valid_command,
+    get_magisk_url,
 )
 from test_base import TestBase, run_test_methods
 from adb_wrapper.adb import (
@@ -124,94 +125,23 @@ class TestUtils(TestBase):
         output = target_device.is_rooted()
         print(output)
 
+    def test_get_magisk_url(self):
+        url = get_magisk_url()
+        print(url)
+
 
 if __name__ == "__main__":
-    adb_methods = [
-        # TestUtils.test_get_devices,
-        # TestUtils.test_get_device,
-        # TestUtils.test_connect,
-        # TestUtils.test_disconnect,
-        TestUtils.test_execute_command,
-        # TestUtils.test_enable_tcpip_mode,
-        # TestUtils.test_enable_usb_mode,
-    ]
-    root_methods = [
-        # TestUtils.test_factory_reset,
-        # TestUtils.test_root,
-        # TestUtils.test_unlock_bootloader,
-        # TestUtils.test_is_oem_unlock_supported,
-        TestUtils.test_fastboot_reboot,
-        # TestUtils.test_fastboot_flash_boot,
-    ]
 
-    device_package_methods = [
-        TestUtils.test_get_system_packages,
-        TestUtils.test_get_google_packages,
-        TestUtils.test_get_third_party_packages,
-        TestUtils.test_get_packages,
-        TestUtils.test_filter_packages,
-        TestUtils.test_grant_permissions,
-        TestUtils.test_revoke_permissions,
-        TestUtils.test_get_package_path,
-        TestUtils.test_get_package_name,
-        TestUtils.test_install_package,
-        TestUtils.test_uninstall_package,
-        TestUtils.test_google_debloat,
+    methods = [
+        # TestUtils.test_load_env,
+        # TestUtils.test_download_link,
+        # TestUtils.test_download_sdk_platform_tools,
+        # TestUtils.test_set_path_environment_variable,
+        # TestUtils.test_find_variable_in_path,
+        # TestUtils.test_make_executable,
+        # TestUtils.test_check_sdk_path,
+        # TestUtils.test_is_valid_command,
+        TestUtils.test_get_magisk_url
     ]
-    device_settings_methods = [
-        TestUtils.test_get_ip,
-        TestUtils.test_get_system_settings,
-        TestUtils.test_get_global_settings,
-        TestUtils.test_get_secure_settings,
-        TestUtils.test_get_settings,
-        TestUtils.test_set_settings,
-        TestUtils.test_is_bootloader_locked,
-        TestUtils.test_get_shell_property,
-        TestUtils.test_enable_lockscreen,
-        TestUtils.test_disable_lockscreen,
-        TestUtils.test_set_brightness,
-        TestUtils.test_set_volume,
-        TestUtils.test_set_password,
-        TestUtils.test_clear_password,
-        TestUtils.test_disable_mobile_data,
-        TestUtils.test_enable_mobile_data,
-        TestUtils.test_disable_wifi,
-        TestUtils.test_enable_wifi,
-    ]
-
-    device_backup_methods = [
-        TestUtils.test_backup,
-        TestUtils.test_restore,
-    ]
-    device_file_methods = [
-        TestUtils.test_file_exists,
-        TestUtils.test_get_current_working_directory,
-        TestUtils.test_get_default_download_directory,
-        TestUtils.test_is_valid_path,
-        TestUtils.test_push_file,
-        TestUtils.test_push_files,
-        TestUtils.test_pull_files,
-        TestUtils.test_pull_file,
-    ]
-
-    device_event_methods = [
-        TestUtils.test_execute_touch_event,
-        TestUtils.test_expand_notifications,
-    ]
-
-    device_su_methods = [TestUtils.test_is_rooted]
-
-    util_methods = [
-        TestUtils.test_load_env,
-        TestUtils.test_download_link,
-        TestUtils.test_download_sdk_platform_tools,
-        TestUtils.test_set_path_environment_variable,
-        TestUtils.test_find_variable_in_path,
-        TestUtils.test_make_executable,
-        TestUtils.test_check_sdk_path,
-        TestUtils.test_is_valid_command,
-    ]
-
-    methods = [TestUtils.test_get_package_path]
 
     run_test_methods(methods)
