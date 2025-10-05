@@ -85,8 +85,8 @@ class TestPackages(TestBase):
             # apk_device_path,
         ]
 
-        for p in package_paths:
-            package_path = target_device.get_package_path(p)
+        for p_path in package_paths:
+            package_path = target_device.get_package_path(p_path)
             print(package_path)
 
     def test_get_package_name(self):

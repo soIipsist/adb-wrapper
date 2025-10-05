@@ -157,6 +157,52 @@ class Package:
         packages = [package for package in packages if matches(package)]
         return packages[0] if len(packages) == 1 else packages
 
+    # def get_package_path(self, package) -> str:
+    #     if isinstance(package, Package):
+    #         package_path = (
+    #             package.package_path if package.package_path else package.package_name
+    #         )
+
+    #     if not package_path.endswith(
+    #         ".apk"
+    #     ):  # use shell pm <package_name> to get package path
+    #         output = self.execute(f"shell pm path {package_path}")
+    #         package_path = output if output else package_path
+    #     return package_path
+
+    # def get_package_name(self, package) -> str:
+
+    #     if isinstance(package, Package):
+    #         package = package.package_name or package.package_path
+
+    #     if isinstance(package, str) and package.endswith(".apk"):
+    #         matched = Package.filter_packages(self.get_packages(), package_path=package)
+    #         if matched:
+    #             package = matched.package_name
+
+    #     return package
+
+    @staticmethod
+    def parse_packages(packages: str) -> List["Package"]:
+        packages = packages.strip().splitlines()
+
+        for idx, package in enumerate(packages):
+            package_path = None
+            package_name = None
+
+            if package.startswith("package:"):
+                package_path = package.split("package:", 1)[1].split("=", 1)[0].strip()
+
+            if "=" in package:
+                package_name = package.split("=", 1)[1].strip()
+
+            name = os.path.basename(package_path)
+            packages[idx] = Package(
+                package_name=package_name, package_path=package_path, name=name
+            )
+
+        return packages
+
     def normalize_packages(
         packages: List[Union[str, "Package"]],
         do_not_delete_packages: List[Union[str, "Package"]],
@@ -516,26 +562,6 @@ class Device(ADB):
 
         return settings
 
-    def parse_packages(self, packages: str) -> list[Package]:
-        packages = packages.strip().splitlines()
-
-        for idx, package in enumerate(packages):
-            package_path = None
-            package_name = None
-
-            if package.startswith("package:"):
-                package_path = package.split("package:", 1)[1].split("=", 1)[0].strip()
-
-            if "=" in package:
-                package_name = package.split("=", 1)[1].strip()
-
-            name = os.path.basename(package_path)
-            packages[idx] = Package(
-                package_name=package_name, package_path=package_path, name=name
-            )
-
-        return packages
-
     def get_settings(self):
         self.system_settings = self.get_system_settings()
         self.global_settings = self.get_global_settings()
@@ -589,13 +615,13 @@ class Device(ADB):
 
     @command(f"shell pm list packages -f {PackageType.SYSTEM.value}", logging=False)
     def get_system_packages(self):
-        return self.parse_packages(self.output)
+        return Package.parse_packages(self.output)
 
     @command(
         f"shell pm list packages -f {PackageType.THIRD_PARTY.value}", logging=False
     )
     def get_third_party_packages(self):
-        return self.parse_packages(self.output)
+        return Package.parse_packages(self.output)
 
     def get_google_packages(self) -> List["Package"]:
         packages = []
@@ -629,7 +655,7 @@ class Device(ADB):
         print("Uninstalling package {0}...".format(package_name))
 
         if remove_dirs:
-            print()
+            # execute root command to remove dirs of the app
             self.execute()
         return self.execute(f"uninstall --user 0 {package_name}")
 
