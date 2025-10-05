@@ -438,20 +438,20 @@ class Device(ADB):
         self.output = self.execute("shell su -c id", logging=False)
         return "uid=0" in self.output
 
-    def get_package_path(self, package):
+    def get_package_path(self, package: Package) -> str:
         if isinstance(package, Package):
-            package = (
+            package_path = (
                 package.package_path if package.package_path else package.package_name
             )
 
-        if not package.endswith(
+        if not package_path.endswith(
             ".apk"
         ):  # use shell pm <package_name> to get package path
-            output = self.execute(f"shell pm path {package}")
-            package = output if output else package
-        return package
+            output = self.execute(f"shell pm path {package_path}")
+            package_path = output if output else package_path
+        return package_path
 
-    def get_package_name(self, package):
+    def get_package_name(self, package: Package) -> str:
 
         if isinstance(package, Package):
             package = package.package_name or package.package_path
@@ -470,7 +470,7 @@ class Device(ADB):
         name: str = None,
         img_src: str = None,
         genre: str = None,
-    ):
+    ) -> List["Package"]:
         """
         Retrieve a list of packages based on the package type.
         If no package type is specified, all packages are returned.
@@ -597,7 +597,7 @@ class Device(ADB):
     def get_third_party_packages(self):
         return self.parse_packages(self.output)
 
-    def get_google_packages(self):
+    def get_google_packages(self) -> List["Package"]:
         packages = []
 
         with resources.open_text(__package__, "google.json") as file:

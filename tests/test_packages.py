@@ -122,7 +122,7 @@ if __name__ == "__main__":
         # TestPackages.test_get_system_packages,
         # TestPackages.test_get_google_packages,
         # TestPackages.test_get_third_party_packages,
-        # TestPackages.test_get_packages,
+        TestPackages.test_get_packages,
         # TestPackages.test_filter_packages,
         # TestPackages.test_get_package_path,
         # TestPackages.test_get_package_name,
