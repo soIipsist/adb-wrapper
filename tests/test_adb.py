@@ -32,6 +32,7 @@ environment_variables = load_env(
     file_path=".env",
 )  # change .env path here if you want to test
 
+
 pc_path = environment_variables.get("PC_PATH")
 apk_pc_path = environment_variables.get("APK_PC_PATH")
 apk_device_path = environment_variables.get("APK_DEVICE_PATH")
