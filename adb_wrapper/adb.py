@@ -441,9 +441,7 @@ class Device(ADB):
     def get_package_path(self, package):
         if isinstance(package, Package):
             package = (
-                package.package_path
-                if package.package_path is not None
-                else package.package_name
+                package.package_path if package.package_path else package.package_name
             )
 
         if not package.endswith(
@@ -613,8 +611,9 @@ class Device(ADB):
         self.google_packages = packages
         return packages
 
-    def install_package(self, package):
-        package_path = self.get_package_path(package)
+    def install_package(self, package: Package):
+        if not isinstance(package, Package):
+            package_path = self.get_package_path(package)
         print("Installing package {0}...".format(package_path))
         is_shell_install = not os.path.exists(package_path)
 
@@ -625,9 +624,13 @@ class Device(ADB):
         )
         return self.execute(cmd)
 
-    def uninstall_package(self, package):
-        package_name = self.get_package_name(package)
+    def uninstall_package(self, package: Package, remove_dirs: bool = False):
+        package_name = package.package_name
         print("Uninstalling package {0}...".format(package_name))
+
+        if remove_dirs:
+            print()
+            self.execute()
         return self.execute(f"uninstall --user 0 {package_name}")
 
     @command("shell cmd statusbar expand-notifications")
@@ -803,10 +806,15 @@ class Device(ADB):
         for p in packages:
             self.install_package(p)
 
-    def uninstall_packages(self, packages: List[str]):
-        packages = Package.normalize_packages(packages, self.do_not_delete_packages)
-        for p in packages:
-            self.uninstall_package(p)
+    def uninstall_packages(
+        self,
+        packages: List[str],
+        do_not_delete_packages: List[str] = None,
+        remove_dirs: bool = False,
+    ):
+        packages = Package.normalize_packages(packages, do_not_delete_packages)
+        for package in packages:
+            self.uninstall_package(package, remove_dirs)
 
     def grant_permissions(self, package, permissions: List[str]):
         for permission in permissions:
