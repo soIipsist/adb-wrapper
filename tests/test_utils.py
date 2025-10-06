@@ -3,6 +3,7 @@ import shutil
 from adb_wrapper.utils import (
     download_file_from_link,
     download_sdk_platform_tools,
+    download_cli_tools,
     load_env,
     make_executable,
     set_path_environment_variable,
@@ -75,16 +76,6 @@ class TestUtils(TestBase):
         self.assertTrue(os.path.exists(output_path))
         print(output_path)
 
-    def test_download_sdk_platform_tools(self):
-        # with output directory defined
-        output_directory = os.getcwd()
-        sdk_path = download_sdk_platform_tools(output_directory)
-        self.assertTrue(os.path.exists(sdk_path))
-
-        # with output directory not defined
-        sdk_path = download_sdk_platform_tools()
-        self.assertTrue(os.path.exists(sdk_path))
-
     def test_set_path_environment_variable(self):
         # set locally
         variable = "/Users/p/"
@@ -138,19 +129,57 @@ class TestUtils(TestBase):
 
         self.assertIsNone(get_apk_asset_url("soIipsist/adb-wrapper"))
 
+    def test_download_sdk_platform_tools(self):
+        # with output directory defined
+        output_directory = os.getcwd()
+        sdk_path = download_sdk_platform_tools(output_directory)
+        self.assertTrue(os.path.exists(sdk_path))
+
+        # with output directory not defined
+        sdk_path = download_sdk_platform_tools()
+        self.assertTrue(os.path.exists(sdk_path))
+
+    def test_check_sdk_path(self):
+
+        # remove sdk platform tools
+        sdk_path = find_variable_in_path("platform-tools")
+        print("ORIGINAL SDK", sdk_path)
+        # shutil.rmtree(sdk_path)
+
+        sdk_path = check_sdk_path()
+
+        if sdk_path:
+
+            self.assertTrue(os.path.exists(sdk_path))
+            device = adb.get_device()
+
+            if device:
+                print(device.get_model())
+        else:
+            print("SDK PATH NOT FOUND")
+
+    def test_download_cli_tools(self):
+        output_directory = os.getcwd()
+        cli_path = download_cli_tools(output_directory)
+
+        print(cli_path)
+
+        self.assertTrue(os.path.exists(cli_path))
+
 
 if __name__ == "__main__":
 
     methods = [
         # TestUtils.test_load_env,
         # TestUtils.test_download_link,
-        # TestUtils.test_download_sdk_platform_tools,
         # TestUtils.test_set_path_environment_variable,
         # TestUtils.test_find_variable_in_path,
         # TestUtils.test_make_executable,
         # TestUtils.test_check_sdk_path,
         # TestUtils.test_is_valid_command,
-        TestUtils.test_get_apk_asset_url
+        # TestUtils.test_get_apk_asset_url,
+        TestUtils.test_download_cli_tools,
+        # TestUtils.test_download_sdk_platform_tools,
     ]
 
     run_test_methods(methods)

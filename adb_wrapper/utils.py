@@ -26,6 +26,35 @@ def download_sdk_platform_tools(output_directory=None):
     return sdk_path
 
 
+def download_cli_tools(output_directory=None):
+    """
+    Downloads the Android SDK Command-Line Tools for the current platform
+    using the official Google links.
+    """
+
+    if not output_directory:
+        print("No directory found, using default home directory.")
+        output_directory = os.path.expanduser("~")
+
+    system_platform = platform.system().lower()
+    urls = {
+        "windows": "https://dl.google.com/android/repository/commandlinetools-win-13114758_latest.zip",
+        "darwin": "https://dl.google.com/android/repository/commandlinetools-mac-13114758_latest.zip",
+        "linux": "https://dl.google.com/android/repository/commandlinetools-linux-13114758_latest.zip",
+    }
+
+    if system_platform not in urls:
+        raise OSError(f"Unsupported platform: {system_platform}")
+
+    download_link = urls[system_platform]
+    output_zip_path = os.path.join(output_directory, os.path.basename(download_link))
+
+    print(
+        f"Downloading Command-Line Tools for {system_platform} from {download_link} ..."
+    )
+    return download_file_from_link(download_link, output_zip_path)
+
+
 def find_variable_in_path(value: str):
     path_variable = os.environ.get("PATH", "")
     path_variable = path_variable.split(os.pathsep)
