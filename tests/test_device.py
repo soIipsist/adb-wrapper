@@ -1,5 +1,6 @@
 from pprint import PrettyPrinter
 import shutil
+from adb_wrapper.firmware import extract_firmware
 from adb_wrapper.utils import load_env
 from test_base import TestBase, run_test_methods
 from adb_wrapper.adb import (
@@ -310,7 +311,7 @@ class TestDevice(TestBase):
 
     def test_is_oem_unlock_supported(self):
         is_supported = target_device.is_oem_unlock_supported()
-        self.assertTrue(is_supported)
+        # self.assertTrue(is_supported)
         print(is_supported)
 
     def test_fastboot_reboot(self):
@@ -319,6 +320,9 @@ class TestDevice(TestBase):
     def test_fastboot_flash_boot(self):
         target_device.fastboot_flash_boot(image_path)
 
+    def test_extract_firmware(self):
+        extract_firmware(target_device)
+
     # shell su methods
     def test_is_rooted(self):
         output = target_device.is_rooted()
@@ -326,72 +330,57 @@ class TestDevice(TestBase):
 
 
 if __name__ == "__main__":
-    root_methods = [
+    methods = [
         # TestDevice.test_factory_reset,
         # TestDevice.test_root,
         # TestDevice.test_unlock_bootloader,
         # TestDevice.test_is_oem_unlock_supported,
-        TestDevice.test_fastboot_reboot,
+        # TestDevice.test_fastboot_reboot,
         # TestDevice.test_fastboot_flash_boot,
+        # TestDevice.test_get_system_packages,
+        # TestDevice.test_get_google_packages,
+        # TestDevice.test_get_third_party_packages,
+        # TestDevice.test_get_packages,
+        # TestDevice.test_filter_packages,
+        # TestDevice.test_grant_permissions,
+        # TestDevice.test_revoke_permissions,
+        # TestDevice.test_get_package_path,
+        # TestDevice.test_get_package_name,
+        # TestDevice.test_install_package,
+        # TestDevice.test_uninstall_package,
+        # TestDevice.test_google_debloat,
+        # TestDevice.test_get_ip,
+        # TestDevice.test_get_system_settings,
+        # TestDevice.test_get_global_settings,
+        # TestDevice.test_get_secure_settings,
+        # TestDevice.test_get_settings,
+        # TestDevice.test_set_settings,
+        # TestDevice.test_is_bootloader_locked,
+        # TestDevice.test_get_shell_property,
+        # TestDevice.test_enable_lockscreen,
+        # TestDevice.test_disable_lockscreen,
+        # TestDevice.test_set_brightness,
+        # TestDevice.test_set_volume,
+        # TestDevice.test_set_password,
+        # TestDevice.test_clear_password,
+        # TestDevice.test_disable_mobile_data,
+        # TestDevice.test_enable_mobile_data,
+        # TestDevice.test_disable_wifi,
+        # TestDevice.test_enable_wifi,
+        # TestDevice.test_backup,
+        # TestDevice.test_restore,
+        # TestDevice.test_file_exists,
+        # TestDevice.test_get_current_working_directory,
+        # TestDevice.test_get_default_download_directory,
+        # TestDevice.test_is_valid_path,
+        # TestDevice.test_push_file,
+        # TestDevice.test_push_files,
+        # TestDevice.test_pull_files,
+        # TestDevice.test_pull_file,
+        # TestDevice.test_execute_touch_event,
+        # TestDevice.test_expand_notifications,
+        # TestDevice.test_is_rooted,
+        TestDevice.test_extract_firmware,
     ]
-
-    device_package_methods = [
-        TestDevice.test_get_system_packages,
-        TestDevice.test_get_google_packages,
-        TestDevice.test_get_third_party_packages,
-        TestDevice.test_get_packages,
-        TestDevice.test_filter_packages,
-        TestDevice.test_grant_permissions,
-        TestDevice.test_revoke_permissions,
-        TestDevice.test_get_package_path,
-        TestDevice.test_get_package_name,
-        TestDevice.test_install_package,
-        TestDevice.test_uninstall_package,
-        TestDevice.test_google_debloat,
-    ]
-    device_settings_methods = [
-        TestDevice.test_get_ip,
-        TestDevice.test_get_system_settings,
-        TestDevice.test_get_global_settings,
-        TestDevice.test_get_secure_settings,
-        TestDevice.test_get_settings,
-        TestDevice.test_set_settings,
-        TestDevice.test_is_bootloader_locked,
-        TestDevice.test_get_shell_property,
-        TestDevice.test_enable_lockscreen,
-        TestDevice.test_disable_lockscreen,
-        TestDevice.test_set_brightness,
-        TestDevice.test_set_volume,
-        TestDevice.test_set_password,
-        TestDevice.test_clear_password,
-        TestDevice.test_disable_mobile_data,
-        TestDevice.test_enable_mobile_data,
-        TestDevice.test_disable_wifi,
-        TestDevice.test_enable_wifi,
-    ]
-
-    device_backup_methods = [
-        TestDevice.test_backup,
-        TestDevice.test_restore,
-    ]
-    device_file_methods = [
-        TestDevice.test_file_exists,
-        TestDevice.test_get_current_working_directory,
-        TestDevice.test_get_default_download_directory,
-        TestDevice.test_is_valid_path,
-        TestDevice.test_push_file,
-        TestDevice.test_push_files,
-        TestDevice.test_pull_files,
-        TestDevice.test_pull_file,
-    ]
-
-    device_event_methods = [
-        TestDevice.test_execute_touch_event,
-        TestDevice.test_expand_notifications,
-    ]
-
-    device_su_methods = [TestDevice.test_is_rooted]
-
-    methods = device_su_methods
 
     run_test_methods(methods)

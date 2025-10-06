@@ -397,6 +397,34 @@ class Device(ADB):
     def get_model(self):
         return self.get_shell_property("ro.product.model")
 
+    def get_region_code(self):
+
+        # ensure region is correct
+
+        region_code_attrs = [
+            "ro.boot.sales_code",
+            "ro.csc.sales_code",
+            "ro.boot.hwc",
+            "ro.boot.region",
+            "ro.product.region",
+            "ro.product.locale",
+            "ro.boot.hardware.sku",
+            "ro.boot.region_id",
+            "ro.product.system.name",
+            "ro.semc.version.cust_revision",
+            "ro.build.display.id",
+        ]
+
+        # check if any attr has a value
+
+        for attr in region_code_attrs:
+            value = self.get_shell_property(attr)
+            if value:
+                # normalize to uppercase, strip whitespace
+                match = re.search(r"[A-Z]{2,5}", value.upper())
+                if match:
+                    return match.group(0)
+
     def get_name(self):
         return self.get_shell_property("ro.product.name")
 
