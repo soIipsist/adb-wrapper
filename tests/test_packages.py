@@ -63,7 +63,7 @@ class TestPackages(TestBase):
         )
 
     def test_get_google_packages(self):
-        packages = adb.get_google_packages()
+        packages = target_device.get_google_packages()
         print(packages)
 
         self.assertTrue(all([isinstance(package, Package) for package in packages]))
