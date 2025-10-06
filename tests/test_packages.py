@@ -119,15 +119,15 @@ class TestPackages(TestBase):
 
 if __name__ == "__main__":
     methods = [
-        # TestDevice.test_get_system_packages,
-        # TestDevice.test_get_google_packages,
-        # TestDevice.test_get_third_party_packages,
-        # TestDevice.test_get_packages,
-        # TestDevice.test_filter_packages,
-        # TestDevice.test_get_package_path,
-        # TestDevice.test_get_package_name,
-        # TestDevice.test_install_package,
-        # TestDevice.test_uninstall_package,
+        # TestPackages.test_get_system_packages,
+        # TestPackages.test_get_google_packages,
+        # TestPackages.test_get_third_party_packages,
+        # TestPackages.test_get_packages,
+        # TestPackages.test_filter_packages,
+        # TestPackages.test_get_package_path,
+        # TestPackages.test_get_package_name,
+        # TestPackages.test_install_package,
+        # TestPackages.test_uninstall_package,
     ]
 
     run_test_methods(methods)
