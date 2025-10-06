@@ -332,7 +332,6 @@ class TestDevice(TestBase):
 if __name__ == "__main__":
     methods = [
         # TestDevice.test_factory_reset,
-        # TestDevice.test_root,
         # TestDevice.test_unlock_bootloader,
         # TestDevice.test_is_oem_unlock_supported,
         # TestDevice.test_fastboot_reboot,
@@ -380,6 +379,7 @@ if __name__ == "__main__":
         # TestDevice.test_execute_touch_event,
         # TestDevice.test_expand_notifications,
         # TestDevice.test_is_rooted,
+        # TestDevice.test_root,
         TestDevice.test_extract_firmware,
     ]
 

@@ -397,6 +397,9 @@ class Device(ADB):
     def get_model(self):
         return self.get_shell_property("ro.product.model")
 
+    def get_vendor(self):
+        return self.get_shell_property("ro.product.manufacturer")
+
     def get_region_code(self):
 
         # ensure region is correct
