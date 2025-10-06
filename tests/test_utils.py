@@ -9,7 +9,7 @@ from adb_wrapper.utils import (
     find_variable_in_path,
     check_sdk_path,
     is_valid_command,
-    get_magisk_url,
+    get_apk_asset_url,
 )
 from test_base import TestBase, run_test_methods
 from adb_wrapper.adb import (
@@ -18,13 +18,11 @@ from adb_wrapper.adb import (
     Package,
     RootMethod,
     VolumeType,
-    magisk_url,
-    apatch_url,
-    kernelsu_url,
     command_checked,
 )
 import os
 
+magisk_url = get_apk_asset_url("topjohnwu/magisk")
 
 adb = ADB()
 devices = adb.get_devices()
@@ -125,9 +123,20 @@ class TestUtils(TestBase):
         output = target_device.is_rooted()
         print(output)
 
-    def test_get_magisk_url(self):
-        url = get_magisk_url()
-        print(url)
+    def test_get_apk_asset_url(self):
+        magisk_url = get_apk_asset_url("topjohnwu/magisk")
+        self.assertIsNotNone(magisk_url)
+        print(magisk_url)
+
+        apatch_url = get_apk_asset_url("bmax121/APatch")
+        print(apatch_url)
+        self.assertIsNotNone(apatch_url)
+
+        kernel_su_url = get_apk_asset_url("tiann/KernelSU")
+        print(kernel_su_url)
+        self.assertIsNotNone(kernel_su_url)
+
+        self.assertIsNone(get_apk_asset_url("soIipsist/adb-wrapper"))
 
 
 if __name__ == "__main__":
@@ -141,7 +150,7 @@ if __name__ == "__main__":
         # TestUtils.test_make_executable,
         # TestUtils.test_check_sdk_path,
         # TestUtils.test_is_valid_command,
-        TestUtils.test_get_magisk_url
+        TestUtils.test_get_apk_asset_url
     ]
 
     run_test_methods(methods)

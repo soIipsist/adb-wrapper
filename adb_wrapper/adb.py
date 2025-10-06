@@ -115,14 +115,6 @@ class VolumeType(Enum):
     SYSTEM = "6"
 
 
-magisk_url = (
-    "https://github.com/topjohnwu/Magisk/releases/download/v28.0/Magisk-v28.0.apk"
-)
-
-apatch_url = "https://github.com/bmax121/APatch/releases/download/10763/APatch_10763_10763-release-signed.apk"
-kernelsu_url = "https://github.com/tiann/KernelSU/releases/download/v1.0.2/KernelSU_v1.0.2_11986-release.apk"
-
-
 class Package:
     img_src = None
     package_name = None
@@ -333,6 +325,9 @@ class Device(ADB):
     def _root_magisk(self, image_path: str):
         print("Magisk Root Method")
         print("1. Install the Magisk app on your Android device.")
+        magisk_url = get_apk_asset_url("topjohnwu/magisk")
+        output_path = download_file_from_link(magisk_url)
+
         print(
             "2. Extract the stock boot image from your device's firmware. (Ensure the firmware matches your current OS version.)"
         )
@@ -347,6 +342,8 @@ class Device(ADB):
 
     def _root_apatch(self, image_path: str):
         print("Apatch Root Method")
+        apatch_url = get_apk_asset_url("bmax121/APatch")
+        print(apatch_url)
         print("1. Install the Apatch app on your Android device.")
         print("2. Extract the stock boot image from your device's firmware.")
         print("3. Copy the extracted boot image to your device.")
@@ -360,6 +357,8 @@ class Device(ADB):
 
     def _root_kernel_su(self, image_path: str = "boot.img"):
         print("KernelSU Root Method")
+        kernel_su_url = get_apk_asset_url("tiann/KernelSU")
+
         print(
             "1. Download a KernelSU-patched boot image that matches your device and current firmware version."
         )

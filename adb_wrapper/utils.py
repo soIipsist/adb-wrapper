@@ -274,8 +274,8 @@ def is_valid_command(base_cmd, command_checked: bool):
     return command_checked, sdk_path
 
 
-def get_magisk_url():
-    api_url = "https://api.github.com/repos/topjohnwu/Magisk/releases/latest"
+def get_apk_asset_url(repository: str):
+    api_url = f"https://api.github.com/repos/{repository}/releases/latest"
 
     request = urllib.request.Request(api_url)
     with urllib.request.urlopen(request, timeout=10) as response:
@@ -287,7 +287,3 @@ def get_magisk_url():
             url = asset.get("browser_download_url", "")
             if name.lower().endswith(".apk") and url:
                 return url
-
-    return (
-        "https://github.com/topjohnwu/Magisk/releases/download/v29.0/Magisk-v29.0.apk"
-    )
