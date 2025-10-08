@@ -45,7 +45,11 @@ class TestPackages(TestBase):
     # device package methods
     def test_get_packages(self):
         packages = target_device.get_packages()
-        print(packages, len(packages))
+
+        for package in packages:
+            self.assertTrue(isinstance(package, Package))
+            print(target_device.get_package_paths(package))
+        print("TOTAL: ", len(packages))
 
     def test_get_third_party_packages(self):
         packages = target_device.get_third_party_packages()
@@ -70,13 +74,22 @@ class TestPackages(TestBase):
         self.assertTrue(len(packages) == 126)
 
     def test_filter_packages(self):
-        packages = adb.get_google_packages()
+        packages = target_device.get_google_packages()
+
+        # filtered = Package.filter_packages(
+        #     packages, name="Android Auto for phone screens"
+        # )
+        # print(filtered, len(packages))
 
         filtered = Package.filter_packages(
-            packages, name="Android Auto for phone screens"
+            packages, package_name="com.google.android.apps.youtube.music"
         )
 
-        print(len(filtered), len(packages))
+        for p in filtered:
+            print(
+                target_device.get_package_paths(p),
+            )
+        print(filtered, len(packages))
 
     def test_get_package_path(self):
         package_paths = [
@@ -86,13 +99,12 @@ class TestPackages(TestBase):
         ]
 
         for p_path in package_paths:
-            package_path = target_device.get_package_path(p_path)
+            package_path = target_device.get_package_paths(p_path)
             print(package_path)
 
     def test_get_package_name(self):
         package_names = [
             Package(package_name="com.google.android.apps.youtube.music"),
-            Package(package_path=package),
             "/system/product/app/FMRadio/FMRadio.apk",
         ]
 
@@ -122,8 +134,8 @@ if __name__ == "__main__":
         # TestPackages.test_get_system_packages,
         # TestPackages.test_get_google_packages,
         # TestPackages.test_get_third_party_packages,
-        TestPackages.test_get_packages,
-        # TestPackages.test_filter_packages,
+        # TestPackages.test_get_packages,
+        TestPackages.test_filter_packages,
         # TestPackages.test_get_package_path,
         # TestPackages.test_get_package_name,
         # TestPackages.test_install_package,

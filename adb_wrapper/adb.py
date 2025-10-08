@@ -146,41 +146,18 @@ class Package:
         return f"{self.package_name}"
 
     @classmethod
-    def filter_packages(self, packages: List["Package"], **filters):
-        def matches(package):
+    def filter_packages(cls, packages: list["Package"], **filters):
+        def matches(pkg):
             return all(
-                getattr(package, key) == value
+                getattr(pkg, key, None) == value
                 for key, value in filters.items()
                 if value is not None
             )
 
-        packages = [package for package in packages if matches(package)]
-        return packages[0] if len(packages) == 1 else packages
+        filtered = [pkg for pkg in packages if matches(pkg)]
+        unique = {pkg.package_name: pkg for pkg in filtered}.values()
 
-    # def get_package_path(self, package) -> str:
-    #     if isinstance(package, Package):
-    #         package_path = (
-    #             package.package_path if package.package_path else package.package_name
-    #         )
-
-    #     if not package_path.endswith(
-    #         ".apk"
-    #     ):  # use shell pm <package_name> to get package path
-    #         output = self.execute(f"shell pm path {package_path}")
-    #         package_path = output if output else package_path
-    #     return package_path
-
-    # def get_package_name(self, package) -> str:
-
-    #     if isinstance(package, Package):
-    #         package = package.package_name or package.package_path
-
-    #     if isinstance(package, str) and package.endswith(".apk"):
-    #         matched = Package.filter_packages(self.get_packages(), package_path=package)
-    #         if matched:
-    #             package = matched.package_name
-
-    #     return package
+        return list(unique)
 
     @staticmethod
     def parse_packages(packages: str) -> List["Package"]:
@@ -203,6 +180,7 @@ class Package:
 
         return packages
 
+    @staticmethod
     def normalize_packages(
         packages: List[Union[str, "Package"]],
         do_not_delete_packages: List[Union[str, "Package"]],
@@ -484,31 +462,6 @@ class Device(ADB):
         self.output = self.execute("shell su -c id", logging=False)
         return "uid=0" in self.output
 
-    def get_package_path(self, package: Package) -> str:
-        if isinstance(package, Package):
-            package_path = (
-                package.package_path if package.package_path else package.package_name
-            )
-
-        if not package_path.endswith(
-            ".apk"
-        ):  # use shell pm <package_name> to get package path
-            output = self.execute(f"shell pm path {package_path}")
-            package_path = output if output else package_path
-        return package_path
-
-    def get_package_name(self, package: Package) -> str:
-
-        if isinstance(package, Package):
-            package = package.package_name or package.package_path
-
-        if isinstance(package, str) and package.endswith(".apk"):
-            matched = Package.filter_packages(self.get_packages(), package_path=package)
-            if matched:
-                package = matched.package_name
-
-        return package
-
     def get_packages(
         self,
         package_type: PackageType = None,
@@ -637,9 +590,40 @@ class Device(ADB):
         self.google_packages = packages
         return packages
 
+    def get_package_paths(self, package: Package) -> str:
+        if isinstance(package, Package):
+            package_name = package.package_name or package.package_path
+        else:
+            package_name = package
+
+        output = self.execute(f"shell pm path {package_name}", logging=False)
+        if not output:
+            return None
+
+        paths = [
+            line.strip().replace("package:", "")
+            for line in output.splitlines()
+            if line.strip().startswith("package:")
+        ]
+
+        return paths
+
+    def get_package_name(self, package: Package) -> str:
+
+        if isinstance(package, Package):
+            package = package.package_name or package.package_path
+
+        if isinstance(package, str) and package.endswith(".apk"):
+            matched = Package.filter_packages(self.get_packages(), package_path=package)
+            if matched:
+                package = matched[0].package_name
+
+        return package
+
     def install_package(self, package: Package):
         if not isinstance(package, Package):
-            package_path = self.get_package_path(package)
+            package_path = self.get_package_paths(package)
+
         print("Installing package {0}...".format(package_path))
         is_shell_install = not os.path.exists(package_path)
 
@@ -654,9 +638,9 @@ class Device(ADB):
         package_name = package.package_name
         print("Uninstalling package {0}...".format(package_name))
 
-        if remove_dirs:
-            # execute root command to remove dirs of the app
-            self.execute()
+        # if remove_dirs:
+        #     # execute root command to remove dirs of the app
+        #     self.execute()
         return self.execute(f"uninstall --user 0 {package_name}")
 
     @command("shell cmd statusbar expand-notifications")
