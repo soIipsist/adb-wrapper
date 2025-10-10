@@ -259,6 +259,10 @@ class ADB:
 
     def get_device(self, device_id: str = None):
         devices = self.get_devices()
+
+        if not device_id:
+            return devices[0]
+
         return next(
             (device for device in devices if not device_id or device.id == device_id),
             None,
@@ -313,7 +317,6 @@ class Device(ADB):
             image_path = "boot.img"
 
         try:
-            print(root_method)
             if self.is_bootloader_locked():
                 q = input(
                     "Your bootloader is locked. Would you like to unlock it? (y/n)"
