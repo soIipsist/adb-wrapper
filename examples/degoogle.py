@@ -7,7 +7,7 @@ def degoogle(device: Device, remove_dirs: bool = False):
     packages = device.get_google_packages()
 
     for package in packages:
-        device.uninstall_package(package)
+        # device.uninstall_package(package)
         print(package.name, package.package_name, package.package_path)
 
 
@@ -19,4 +19,5 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
     adb = ADB()
-    adb.get_device(args.device_id)
+    device = adb.get_device(args.device_id)
+    degoogle(device, args.remove_dirs)

@@ -261,7 +261,10 @@ class ADB:
         devices = self.get_devices()
 
         if not device_id:
-            return devices[0]
+            if len(devices) > 0:
+                return devices[0]
+            else:
+                raise ValueError("No devices found.")
 
         return next(
             (device for device in devices if not device_id or device.id == device_id),
