@@ -4,9 +4,16 @@ description = "A Python ADB wrapper for executing commands on multiple devices."
 license = { text = "MIT License" }
 name = "adb-wrapper"
 readme = "README.md"
-requires-python = ">=3.6"
+requires-python = ">=3.12"
 version = "1.0.0"
 
 [build-system]
-requires = ["setuptools", "wheel"]
+requires = ["setuptools>=61"]
 build-backend = "setuptools.build_meta"
+
+[tool.setuptools]
+package-dir = {"adb-wrapper" = "."}
+packages = ["adb-wrapper", "adb_wrapper", "utils"]
+
+[tool.setuptools.package-data]
+"src" = [".config", "app.css"]
