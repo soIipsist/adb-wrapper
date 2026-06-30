@@ -11,9 +11,5 @@ version = "1.0.0"
 requires = ["setuptools>=61"]
 build-backend = "setuptools.build_meta"
 
-[tool.setuptools]
-package-dir = {"adb-wrapper" = "."}
-packages = ["adb-wrapper", "adb_wrapper", "utils"]
-
-[tool.setuptools.package-data]
-"src" = [".config", "app.css"]
+[tool.setuptools.packages.find]
+where = ["."]
