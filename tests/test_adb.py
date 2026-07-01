@@ -1,4 +1,5 @@
 import pytest
+import os
 from adb_wrapper.adb import ADB, check_sdk_path, PackageType
 from pprint import PrettyPrinter
 
@@ -15,13 +16,9 @@ def test_get_devices():
     for device in devices:
         print(device.get_model())
 
-def test_install_packages():
-    device.install_package()
-
 def test_get_device_settings():
    settings = device.get_settings()
    pp.pprint(settings)
-
 
 @pytest.mark.integration
 def test_set_device_setting():
@@ -30,3 +27,9 @@ def test_set_device_setting():
 def test_get_packages():
     packages = device.get_packages(PackageType.GOOGLE)
     pp.pprint(packages)
+
+def test_install_package():
+    package_path = os.environ.get("APK_PATH")
+    assert os.path.exists(package_path)
+
+    device.install_package(package_path)

@@ -183,19 +183,19 @@ class Package:
     @staticmethod
     def normalize_packages(
         packages: List[Union[str, "Package"]],
-        do_not_delete_packages: List[Union[str, "Package"]],
+        excluded_packages: List[Union[str, "Package"]],
     ) -> List["Package"]:
         """Returns safe to delete packages."""
 
         def to_package(p):
             return p if isinstance(p, Package) else Package(p)
 
-        do_not_delete_packages = [to_package(p) for p in do_not_delete_packages]
+        excluded_packages = [to_package(p) for p in excluded_packages]
 
         return [
             pkg
             for pkg in (to_package(p) for p in packages)
-            if pkg not in do_not_delete_packages
+            if pkg not in excluded_packages
         ]
 
 
@@ -825,10 +825,10 @@ class Device(ADB):
     def uninstall_packages(
         self,
         packages: List[str],
-        do_not_delete_packages: List[str] = None,
+        excluded_packages: List[str] = None,
         remove_dirs: bool = False,
     ):
-        packages = Package.normalize_packages(packages, do_not_delete_packages)
+        packages = Package.normalize_packages(packages, excluded_packages)
         for package in packages:
             self.uninstall_package(package, remove_dirs)
 
