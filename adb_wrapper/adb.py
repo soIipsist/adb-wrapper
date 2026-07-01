@@ -661,7 +661,7 @@ class Device(ADB):
     def enable_lock_screen(self):
         return self.output
 
-    def set_brightness(self, brightness: int):
+    def set_brightness(self, brightness: int): # 0 to 255
         return self.set_settings([f"system.screen_brightness={brightness}"])
 
     def set_volume(
